@@ -1,0 +1,1374 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Project Equipment Report — AMR Asia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/docx@7.8.2/build/index.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<?!= include("styles") ?>
+<?!= include("i18n") ?>
+</head>
+<body>
+
+<!-- ══════════════════════ AUTH GATE ══════════════════════ -->
+<div id="authGate">
+  <div class="auth-card">
+    <div class="auth-brand">
+      <div class="auth-logo-box" id="authLogoBox">
+        <!-- Logo injected by JS after it loads successfully -->
+        <span class="auth-logo-fallback" id="authLogoFallback">AMR ASIA</span>
+      </div>
+      <div class="info">
+        <h2 data-i18n="iff8a6235">เข้าสู่ระบบ</h2>
+        <div class="sub">AMR Inspection · OMA</div>
+      </div>
+    </div>
+    <label for="authUser" data-i18n="i8fa50c79">ชื่อผู้ใช้</label>
+    <input type="text" class="tin" id="authUser" autocomplete="off" placeholder="username">
+    <label for="authPass" data-i18n="i97110364">รหัสผ่าน</label>
+    <div class="auth-pw">
+      <input type="password" class="tin" id="authPass" autocomplete="current-password" placeholder="••••••••">
+      <span class="eye" id="authEye" data-i18n="i1d31fb74">แสดง</span>
+    </div>
+    <div class="auth-err" id="authErr"></div>
+    <button class="auth-btn" id="authBtn" data-i18n="iff8a6235">เข้าสู่ระบบ</button>
+    <div class="auth-foot" data-i18n="ica46c96a">AMR ASIA CO., LTD. · ระบบตรวจสอบอุปกรณ์</div>
+  </div>
+</div>
+
+<!-- ══════════════════════ PDPA ════════════════════════════ -->
+<div id="pdpaBanner">
+  <div class="pd-head"><div class="pd-ic">🛡</div><b data-i18n="if1489329">ความเป็นส่วนตัวและข้อมูลส่วนบุคคล</b></div>
+  <div class="pd-body">
+    <span data-i18n="iee3eaf84">ระบบนี้เก็บข้อมูลการใช้งานของคุณเพื่อการตรวจสอบและบำรุงรักษา</span>
+    <a id="pdpaToggle" data-i18n="i4f361629">ดูรายละเอียด</a>
+    <div class="pd-extra" id="pdpaExtra" data-i18n="i83bfebd9">ข้อมูลที่เก็บ: ชื่อผู้ใช้ บทบาท เวลาเข้าใช้งาน รายการตรวจและรูปภาพอุปกรณ์ ตาม พ.ร.บ. คุ้มครองข้อมูลส่วนบุคคล พ.ศ. 2562</div>
+  </div>
+  <div class="pd-actions">
+    <button class="pd-btn pd-detail" id="pdpaDetailBtn" data-i18n="i412a9419">รายละเอียด</button>
+    <button class="pd-btn pd-accept" id="pdpaAccept" data-i18n="ie7500cc4">ยินยอม</button>
+  </div>
+</div>
+
+<!-- ══════════════════════ HEADER ══════════════════════════ -->
+<header class="app">
+  <button id="sidebarToggleBtn" class="hdr-ctrl-btn" title="เมนู" data-i18n-title="i2fe77f37" style="width:36px;padding:6px 0;font-size:18px">☰</button>
+  <div class="brandmark" id="headerBrandmark">
+    <!-- Logo injected by JS -->
+    <span style="font-family:'IBM Plex Mono';font-size:13px;font-weight:700;color:var(--accent-deep)" id="headerLogoFallback">AMR ASIA</span>
+  </div>
+  <div class="brand-text">
+    <h1>Project Equipment Report</h1>
+    <div class="sub" data-i18n="icde2438e">รายงานอุปกรณ์โครงการ</div>
+  </div>
+  <div class="header-stat"><div class="num" id="statCount">0</div><div class="lbl" data-i18n="ie9f51b13">บันทึกแล้ว</div></div>
+  <div class="user-chip" id="userChip" style="display:none">
+    <div class="av" id="uAvatar">?</div>
+    <div><div class="un" id="uName">—</div><div class="ur" id="uRole">—</div></div>
+    <button class="logout" id="logoutBtn" type="button" title="ออกจากระบบ" data-i18n-title="ie04ffa81" aria-label="ออกจากระบบ">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" y1="2" x2="12" y2="12"></line></svg>
+    </button>
+  </div>
+  <button id="darkToggleBtn" class="hdr-ctrl-btn" title="Dark / Light mode" style="width:36px;padding:6px 0;font-size:18px">☀️</button>
+  <button id="langToggleBtn" class="hdr-ctrl-btn" title="Switch to English" style="width:36px;padding:6px 0;font-size:12px;font-weight:700">EN</button>
+</header>
+
+<!-- ══════════════════════ SIDEBAR + MAIN ═══════════════════ -->
+<div class="app-body">
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+<nav class="sidebar" id="sidebar">
+  <button class="tab tab-home active" data-tab="dash" id="tabHome"><span class="th-label">Project Summary Dashboard</span></button>
+  <div class="nav-group" data-group="network">
+    <button class="nav-group-title" type="button"><span class="ngt-ic">🌐</span><span class="ngt-label">Network</span><span class="ngt-arrow">▾</span></button>
+    <div class="nav-group-items">
+      <div class="nav-subgroup" data-subgroup="network-report">
+        <button class="nav-subgroup-title" type="button"><span class="nsgt-label" data-i18n="i603cdee6">รายงานผลการปฏิบัติงาน</span><span class="nsgt-arrow">▾</span></button>
+        <div class="nav-subgroup-items">
+        <button class="tab" data-tab="dash" id="tabDash" data-i18n="id856d7de">📊 ภาพรวม</button>
+        <button class="tab" data-tab="add" id="tabAdd" data-i18n="i3f76a109">＋ เพิ่มรายการ</button>
+        <button class="tab" data-tab="saved"><span data-i18n="i7625bfd4">รายการที่บันทึก</span> <span class="pill" id="savedPill">0</span></button>
+        <button class="tab" data-tab="survey"><span data-i18n="idda8f1cd">🔍 สำรวจภาคสนาม</span> <span class="pill" id="surveyPill">0</span></button>
+        <button class="tab admin-only" data-tab="import">Import / Export</button>
+        <button class="tab" data-tab="master" id="tabMaster"><span data-i18n="ie7c8d46c">จัดการข้อมูลหลัก</span> <span class="pill" id="masterPill">0</span></button>
+        </div>
+      </div>
+      <button class="tab" data-tab="pm" data-i18n="ide5b123c">การบำรุงรักษาเชิงป้องกัน</button>
+      <button class="tab" data-tab="cm" data-i18n="i18d7c6e6">การบำรุงรักษาเชิงแก้ไข</button>
+    </div>
+  </div>
+  <div class="nav-group" data-group="solar">
+    <button class="nav-group-title" type="button"><span class="ngt-ic">🔆</span><span class="ngt-label">Solar</span><span class="ngt-arrow">▾</span></button>
+    <div class="nav-group-items">
+      <div class="nav-subgroup" data-subgroup="solar-report">
+        <button class="nav-subgroup-title" type="button"><span class="nsgt-label" data-i18n="i603cdee6">รายงานผลการปฏิบัติงาน</span><span class="nsgt-arrow">▾</span></button>
+        <div class="nav-subgroup-items">
+        <button class="tab" data-tab="dash" data-i18n="id856d7de">📊 ภาพรวม</button>
+        <button class="tab" data-tab="add" data-i18n="i3f76a109">＋ เพิ่มรายการ</button>
+        <button class="tab" data-tab="saved" data-i18n="i7625bfd4">รายการที่บันทึก</button>
+        <button class="tab" data-tab="survey" data-i18n="idda8f1cd">🔍 สำรวจภาคสนาม</button>
+        <button class="tab admin-only" data-tab="import">Import / Export</button>
+        <button class="tab" data-tab="master" data-i18n="ie7c8d46c">จัดการข้อมูลหลัก</button>
+        </div>
+      </div>
+      <button class="tab" data-tab="pm" data-i18n="ide5b123c">การบำรุงรักษาเชิงป้องกัน</button>
+      <button class="tab" data-tab="cm" data-i18n="i18d7c6e6">การบำรุงรักษาเชิงแก้ไข</button>
+    </div>
+  </div>
+  <div class="nav-group" data-group="cctv">
+    <button class="nav-group-title" type="button"><span class="ngt-ic">📹</span><span class="ngt-label">CCTV</span><span class="ngt-arrow">▾</span></button>
+    <div class="nav-group-items">
+      <div class="nav-subgroup" data-subgroup="cctv-report">
+        <button class="nav-subgroup-title" type="button"><span class="nsgt-label" data-i18n="i603cdee6">รายงานผลการปฏิบัติงาน</span><span class="nsgt-arrow">▾</span></button>
+        <div class="nav-subgroup-items">
+        <button class="tab" data-tab="dash" data-i18n="id856d7de">📊 ภาพรวม</button>
+        <button class="tab" data-tab="add" data-i18n="i3f76a109">＋ เพิ่มรายการ</button>
+        <button class="tab" data-tab="saved" data-i18n="i7625bfd4">รายการที่บันทึก</button>
+        <button class="tab" data-tab="survey" data-i18n="idda8f1cd">🔍 สำรวจภาคสนาม</button>
+        <button class="tab admin-only" data-tab="import">Import / Export</button>
+        <button class="tab" data-tab="master" data-i18n="ie7c8d46c">จัดการข้อมูลหลัก</button>
+        </div>
+      </div>
+      <button class="tab" data-tab="pm" data-i18n="ide5b123c">การบำรุงรักษาเชิงป้องกัน</button>
+      <button class="tab" data-tab="cm" data-i18n="i18d7c6e6">การบำรุงรักษาเชิงแก้ไข</button>
+    </div>
+  </div>
+  <div class="nav-group" data-group="radio">
+    <button class="nav-group-title" type="button"><span class="ngt-ic">📡</span><span class="ngt-label">Radio</span><span class="ngt-arrow">▾</span></button>
+    <div class="nav-group-items">
+      <div class="nav-subgroup" data-subgroup="radio-report">
+        <button class="nav-subgroup-title" type="button"><span class="nsgt-label" data-i18n="i603cdee6">รายงานผลการปฏิบัติงาน</span><span class="nsgt-arrow">▾</span></button>
+        <div class="nav-subgroup-items">
+        <button class="tab" data-tab="dash" data-i18n="id856d7de">📊 ภาพรวม</button>
+        <button class="tab" data-tab="add" data-i18n="i3f76a109">＋ เพิ่มรายการ</button>
+        <button class="tab" data-tab="saved" data-i18n="i7625bfd4">รายการที่บันทึก</button>
+        <button class="tab" data-tab="survey" data-i18n="idda8f1cd">🔍 สำรวจภาคสนาม</button>
+        <button class="tab admin-only" data-tab="import">Import / Export</button>
+        <button class="tab" data-tab="master" data-i18n="ie7c8d46c">จัดการข้อมูลหลัก</button>
+        </div>
+      </div>
+      <button class="tab" data-tab="pm" data-i18n="ide5b123c">การบำรุงรักษาเชิงป้องกัน</button>
+      <button class="tab" data-tab="cm" data-i18n="i18d7c6e6">การบำรุงรักษาเชิงแก้ไข</button>
+    </div>
+  </div>
+  <div class="nav-group" data-group="scada">
+    <button class="nav-group-title" type="button"><span class="ngt-ic">🖥️</span><span class="ngt-label">SCADA</span><span class="ngt-arrow">▾</span></button>
+    <div class="nav-group-items">
+      <div class="nav-subgroup" data-subgroup="scada-report">
+        <button class="nav-subgroup-title" type="button"><span class="nsgt-label" data-i18n="i603cdee6">รายงานผลการปฏิบัติงาน</span><span class="nsgt-arrow">▾</span></button>
+        <div class="nav-subgroup-items">
+        <button class="tab" data-tab="dash" data-i18n="id856d7de">📊 ภาพรวม</button>
+        <button class="tab" data-tab="add" data-i18n="i3f76a109">＋ เพิ่มรายการ</button>
+        <button class="tab" data-tab="saved" data-i18n="i7625bfd4">รายการที่บันทึก</button>
+        <button class="tab" data-tab="survey" data-i18n="idda8f1cd">🔍 สำรวจภาคสนาม</button>
+        <button class="tab admin-only" data-tab="import">Import / Export</button>
+        <button class="tab" data-tab="master" data-i18n="ie7c8d46c">จัดการข้อมูลหลัก</button>
+        </div>
+      </div>
+      <button class="tab" data-tab="pm" data-i18n="ide5b123c">การบำรุงรักษาเชิงป้องกัน</button>
+      <button class="tab" data-tab="cm" data-i18n="i18d7c6e6">การบำรุงรักษาเชิงแก้ไข</button>
+    </div>
+  </div>
+  <div class="nav-group" data-group="railway">
+    <button class="nav-group-title" type="button"><span class="ngt-ic">🚆</span><span class="ngt-label">Railway</span><span class="ngt-arrow">▾</span></button>
+    <div class="nav-group-items">
+      <div class="nav-subgroup" data-subgroup="railway-report">
+        <button class="nav-subgroup-title" type="button"><span class="nsgt-label" data-i18n="i603cdee6">รายงานผลการปฏิบัติงาน</span><span class="nsgt-arrow">▾</span></button>
+        <div class="nav-subgroup-items">
+        <button class="tab" data-tab="dash" data-i18n="id856d7de">📊 ภาพรวม</button>
+        <button class="tab" data-tab="add" data-i18n="i3f76a109">＋ เพิ่มรายการ</button>
+        <button class="tab" data-tab="saved" data-i18n="i7625bfd4">รายการที่บันทึก</button>
+        <button class="tab" data-tab="survey" data-i18n="idda8f1cd">🔍 สำรวจภาคสนาม</button>
+        <button class="tab admin-only" data-tab="import">Import / Export</button>
+        <button class="tab" data-tab="master" data-i18n="ie7c8d46c">จัดการข้อมูลหลัก</button>
+        </div>
+      </div>
+      <button class="tab" data-tab="pm" data-i18n="ide5b123c">การบำรุงรักษาเชิงป้องกัน</button>
+      <button class="tab" data-tab="cm" data-i18n="i18d7c6e6">การบำรุงรักษาเชิงแก้ไข</button>
+    </div>
+  </div>
+  <div class="nav-group" data-group="wi">
+    <button class="nav-group-title" type="button"><span class="ngt-ic">🛠️</span><span class="ngt-label">Equipment Control</span><span class="ngt-arrow">▾</span></button>
+    <div class="nav-group-items">
+      <button class="tab" data-tab="wi" data-i18n="iaface55e">คลังเช็คลิสต์ &amp; WI</button>
+      <button class="tab" data-tab="eqdocs" data-i18n="ie398ffc0">เอกสารอุปกรณ์</button>
+    </div>
+  </div>
+  <div class="nav-group" data-group="store">
+    <button class="nav-group-title" type="button"><span class="ngt-ic">📦</span><span class="ngt-label">Store Control</span><span class="ngt-arrow">▾</span></button>
+    <div class="nav-group-items">
+      <button class="tab" data-tab="store" data-i18n="if196cbef">คลังอะไหล่</button>
+    </div>
+  </div>
+  <div class="nav-group" data-group="setting">
+    <button class="nav-group-title" type="button"><span class="ngt-ic">⚙️</span><span class="ngt-label">Setting</span><span class="ngt-arrow">▾</span></button>
+    <div class="nav-group-items">
+      <button class="tab" data-tab="users" id="tabUsers"><span data-i18n="ie1e01393">จัดการผู้ใช้</span> <span class="pill" id="usersPill">0</span></button>
+    </div>
+  </div>
+</nav>
+
+<main>
+
+<!-- ══════ PANEL: DASHBOARD ══════ -->
+<section class="panel active" id="panel-dash">
+  <div class="eyebrow">Project Summary Dashboard</div>
+  <div class="panel-title" data-i18n="i23f8798a">ภาพรวมอุปกรณ์ทุกโครงการ</div>
+  <div class="panel-desc" data-i18n="id0bfffd3">สรุปจำนวนรายการที่บันทึก แยกตามโครงการ และแนวโน้มการอัปโหลดรายวัน — รวมทุกหมวดในระบบ</div>
+
+  <!-- หมวดหมู่โครงการ — ทางลัดไปยังแต่ละกลุ่มในเมนูซ้าย (ยังใช้ข้อมูลชุดเดียวกันทั้งระบบ
+       จนกว่าจะแยก field หมวดหมู่จริงใน Master/Records) -->
+  <div class="cat-launch-row" id="catLaunchRow">
+    <button class="cat-launch" data-group="network" type="button"><span class="cl-ic">🌐</span><span class="cl-label">Network</span></button>
+    <button class="cat-launch" data-group="solar" type="button"><span class="cl-ic">🔆</span><span class="cl-label">Solar</span></button>
+    <button class="cat-launch" data-group="cctv" type="button"><span class="cl-ic">📹</span><span class="cl-label">CCTV</span></button>
+    <button class="cat-launch" data-group="radio" type="button"><span class="cl-ic">📡</span><span class="cl-label">Radio</span></button>
+    <button class="cat-launch" data-group="scada" type="button"><span class="cl-ic">🖥️</span><span class="cl-label">SCADA</span></button>
+    <button class="cat-launch" data-group="railway" type="button"><span class="cl-ic">🚆</span><span class="cl-label">Railway</span></button>
+  </div>
+
+  <!-- leaderDashSection kept as empty anchor for compat -->
+  <div id="leaderDashSection" style="display:none"></div>
+
+  <div id="projDetailModal" style="display:none;position:fixed;inset:0;z-index:400;background:rgba(20,26,34,.6);align-items:center;justify-content:center;padding:20px">
+    <div style="background:var(--surface);border-radius:18px;max-width:480px;width:100%;padding:28px;box-shadow:var(--shadow-lift);position:relative">
+      <button onclick="document.getElementById('projDetailModal').style.display='none'" style="position:absolute;top:14px;right:16px;font-size:20px;color:var(--ink-faint);cursor:pointer;background:none;border:none">&times;</button>
+      <div id="projDetailContent"></div>
+    </div>
+  </div>
+
+  <div style="margin-bottom:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+    <label style="font-size:13px;font-weight:600;color:var(--ink-soft)" data-i18n="i198740ed">แสดงข้อมูล:</label>
+    <select id="dashMainFilter" class="tin" style="width:auto;min-width:180px;font-size:13px;padding:8px 12px"><option value="__all" data-i18n="i3a09fdd8">ทุกโครงการ</option></select>
+  </div>
+  <div class="kpi-row" id="kpiRow"></div>
+  <div class="dash-card" id="overviewDashCard" style="margin-bottom:14px">
+    <div class="dc-head">
+      <b data-i18n="i4d84a137">🗂 ภาพรวมทุกโครงการ</b>
+      <span id="overviewDonutLegend" style="font-size:12px;color:var(--ink-soft)"></span>
+    </div>
+    <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start">
+      <!-- LEFT: donut -->
+      <div style="flex:none;display:flex;flex-direction:column;align-items:center">
+        <div style="position:relative">
+          <svg id="overviewDonutSvg" width="220" height="220" viewBox="0 0 220 220" style="cursor:pointer;display:block"></svg>
+          <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none">
+            <div style="font-size:26px;font-weight:700;font-family:'IBM Plex Mono';color:var(--accent)" id="overviewDonutPct">0%</div>
+            <div style="font-size:10px;color:var(--ink-soft)" data-i18n="ib29d666a">รวม</div>
+          </div>
+        </div>
+        <div id="overviewDonutList" style="margin-top:10px;width:220px;display:flex;flex-direction:column;gap:5px"></div>
+      </div>
+      <!-- RIGHT: progress tubes -->
+      <div id="overviewProgressWrap" style="flex:1;min-width:240px"></div>
+    </div>
+  </div>
+
+  <div class="dash-card" id="dailyTrendCard" style="margin-bottom:14px">
+    <div class="dc-head"><b data-i18n="i6ea7ff24">📈 แนวโน้มการบันทึกรายวัน (14 วันล่าสุด)</b></div>
+    <div id="chartDaily"></div>
+  </div>
+
+  <div class="dash-grid-3">
+    <div class="dash-card" id="dqCard"></div>
+    <div class="dash-card" id="deadlineCard"></div>
+    <div class="dash-card" id="topInspectorsCard"></div>
+  </div>
+
+  <div style="text-align:center;margin-top:14px"><button class="btn btn-soft" id="dashRefresh" data-i18n="ifeeb9bf5">↻ รีเฟรชข้อมูล</button></div>
+</section>
+
+<!-- ══════ PANEL: PREVENTIVE MAINTENANCE ══════ -->
+<section class="panel" id="panel-pm">
+  <div class="eyebrow">Preventive Maintenance</div>
+  <div class="panel-title" data-i18n="ide5b123c">การบำรุงรักษาเชิงป้องกัน</div>
+  <div class="panel-desc" data-i18n="if8ef9736">ตารางบำรุงรักษาตามรอบเวลา ใบงานที่ต้องทำ และประวัติการบำรุงรักษา</div>
+
+  <div class="pm-subnav" id="pmSubnav">
+    <button class="pm-subtab active" data-pmview="overview" type="button" data-i18n="i70e131c5">ภาพรวม</button>
+    <button class="pm-subtab" data-pmview="schedule" type="button" data-i18n="ief67c109">ตารางบำรุงรักษา</button>
+    <button class="pm-subtab" data-pmview="workorders" type="button"><span data-i18n="i5bca46b7">ใบงานที่รอดำเนินการ</span> <span class="pill" id="pmWoPill">0</span></button>
+    <button class="pm-subtab" data-pmview="history" type="button" data-i18n="i520e8207">ประวัติ</button>
+  </div>
+
+  <!-- OVERVIEW -->
+  <div class="pm-view active" id="pmView-overview">
+    <div class="kpi-row" id="pmKpiRow"></div>
+    <div class="dash-card" id="pmDeadlineCard"></div>
+  </div>
+
+  <!-- SCHEDULE -->
+  <div class="pm-view" id="pmView-schedule">
+    <div class="ro-banner" style="display:block" id="pmScheduleReadonlyHint" data-i18n="i27a0d034">เฉพาะ admin/manager เท่านั้นที่ตั้ง/แก้ไขตารางบำรุงรักษาได้</div>
+    <div class="admin-mgr-only" style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+      <button class="ghost-btn" id="pmDownloadTemplateBtn" type="button" data-i18n="i2f5129ce">⬇ ดาวน์โหลด Template (Excel)</button>
+      <label class="btn btn-soft" for="pmImportFile" style="cursor:pointer;margin:0" data-i18n="ife603be2">⬆ นำเข้าแผน PM จาก Excel</label>
+      <input type="file" id="pmImportFile" accept=".xlsx,.xls" hidden>
+      <button class="btn btn-primary" id="pmAddScheduleBtn" type="button" data-i18n="ib0242e1c">＋ เพิ่มตารางบำรุงรักษา</button>
+    </div>
+    <div id="pmImportPreviewBox" style="display:none" class="dash-card">
+      <div class="dc-head"><b data-i18n="i4c6ef265">ตัวอย่างแผน PM ที่จะนำเข้า</b><span id="pmImportSummary" style="font-size:12px;color:var(--ink-soft)"></span></div>
+      <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12.5px" id="pmImportPreviewTable"></table></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:14px">
+        <button class="btn btn-soft" id="pmImportCancelBtn" type="button" data-i18n="i7d3094b8">ยกเลิก</button>
+        <button class="btn btn-primary" id="pmImportConfirmBtn" type="button" data-i18n="i027e9eae">✅ ยืนยันนำเข้า</button>
+      </div>
+    </div>
+    <div class="dash-card"><div id="pmScheduleList"></div></div>
+  </div>
+
+  <!-- WORK ORDERS -->
+  <div class="pm-view" id="pmView-workorders">
+    <div class="dash-card"><div id="pmWorkOrderList"></div></div>
+  </div>
+
+  <!-- HISTORY -->
+  <div class="pm-view" id="pmView-history">
+    <div class="dash-card"><div id="pmHistoryList"></div></div>
+  </div>
+</section>
+
+<!-- ══════ MODAL: เพิ่ม/แก้ไข ตารางบำรุงรักษา PM ══════ -->
+<div id="pmScheduleModal" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(20,26,34,.6);align-items:center;justify-content:center;padding:20px">
+  <div style="background:var(--surface);border-radius:18px;max-width:520px;width:100%;max-height:88vh;overflow-y:auto;box-shadow:var(--shadow-lift)">
+    <div style="padding:20px 24px 0;display:flex;align-items:center;justify-content:space-between">
+      <h3 id="pmSchModalTitle" data-i18n="i1ed0ea1d">เพิ่มตารางบำรุงรักษา</h3>
+      <div id="pmSchModalClose" style="cursor:pointer;font-size:18px">&times;</div>
+    </div>
+    <div style="padding:18px 24px 8px;display:flex;flex-direction:column;gap:14px">
+      <div class="cascade" style="grid-template-columns:1fr 1fr">
+        <div class="field"><label><span data-i18n="ibedef050">โครงการ</span> <span class="req">*</span></label><select class="tin" id="pmSchProject"></select></div>
+        <div class="field"><label><span data-i18n="ibc779a30">อุปกรณ์</span> <span class="req">*</span></label><select class="tin" id="pmSchEquip"></select></div>
+      </div>
+      <div class="field"><label><span data-i18n="i461d8c36">รอบบำรุงรักษา (ทุกกี่วัน)</span> <span class="req">*</span></label><input class="tin" type="number" min="1" id="pmSchInterval" placeholder="เช่น 90 = ทุก 3 เดือน" data-i18n-placeholder="ia1dbd239"></div>
+      <div class="field">
+        <label><span data-i18n="ifedc0071">ใช้แม่แบบเช็คลิสต์/WI จากคลัง</span> <span style="font-weight:400;color:var(--ink-soft)" data-i18n="iecd57806">(ไม่บังคับ)</span></label>
+        <select class="tin" id="pmSchTemplate"><option value="" data-i18n="i1ede9d86">— กำหนดเช็คลิสต์เอง —</option></select>
+        <div id="pmSchTemplateWiLink" style="margin-top:6px;display:none"></div>
+      </div>
+      <div class="field" id="pmSchChecklistField">
+        <label data-i18n="if5c3468f">เช็คลิสต์งานตรวจ</label>
+        <div id="pmSchChecklistRows" style="display:flex;flex-direction:column;gap:8px"></div>
+        <button class="ghost-btn" id="pmSchAddChecklistItem" type="button" style="margin-top:8px" data-i18n="i30f407ca">＋ เพิ่มหัวข้อเช็คลิสต์</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;padding:18px 24px 24px">
+      <button class="btn btn-soft" id="pmSchCancelBtn" type="button" style="flex:1" data-i18n="i7d3094b8">ยกเลิก</button>
+      <button class="btn btn-primary" id="pmSchSaveBtn" type="button" style="flex:1" data-i18n="ib6b59fbf">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ MODAL: บันทึกผลบำรุงรักษา (ทำใบงาน PM) ══════ -->
+<div id="pmCompleteModal" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(20,26,34,.6);align-items:center;justify-content:center;padding:20px">
+  <div style="background:var(--surface);border-radius:18px;max-width:520px;width:100%;max-height:88vh;overflow-y:auto;box-shadow:var(--shadow-lift)">
+    <div style="padding:20px 24px 0;display:flex;align-items:center;justify-content:space-between">
+      <h3 data-i18n="i1e169629">บันทึกผลบำรุงรักษา</h3>
+      <div id="pmCompModalClose" style="cursor:pointer;font-size:18px">&times;</div>
+    </div>
+    <div style="padding:10px 24px 0;color:var(--ink-soft);font-size:13px" id="pmCompModalMeta"></div>
+    <div style="padding:0 24px 8px" id="pmCompWiLink"></div>
+    <div style="padding:8px 24px;display:flex;flex-direction:column;gap:14px">
+      <div class="field">
+        <label data-i18n="if5c3468f">เช็คลิสต์งานตรวจ</label>
+        <div id="pmCompChecklistRows" style="display:flex;flex-direction:column;gap:8px"></div>
+      </div>
+      <div class="field">
+        <label><span data-i18n="ic6001366">อะไหล่ที่ใช้ไป</span> <span style="font-weight:400;color:var(--ink-soft)" data-i18n="iecd57806">(ไม่บังคับ)</span></label>
+        <div class="store-request-only"><button class="btn btn-soft" id="pmCompGotoWithdrawBtn" type="button" style="font-size:12.5px;padding:8px 14px" data-i18n="ic2d163ac">📦 ไปเบิกอะไหล่จากคลังสำหรับงานนี้</button></div>
+      </div>
+      <div class="field"><label data-i18n="i89ef56de">หมายเหตุ</label><textarea class="tin" id="pmCompNote" placeholder="รายละเอียดเพิ่มเติม" data-i18n-placeholder="idcdbe485" style="min-height:60px"></textarea></div>
+      <div class="field">
+        <label data-i18n="i6ca040e2">รูปถ่ายหลักฐาน</label>
+        <div class="imgslot">
+          <label class="drop" id="pmCompDrop" for="pmCompFile"><div class="ph-content"><div class="drop-hint"><b data-i18n="i18c57d25">เลือกรูป</b><span data-i18n="i3c338f5e">ภาพถ่ายหลังบำรุงรักษา</span></div></div><div class="replace-badge" data-i18n="i353072b9">แตะเพื่อเปลี่ยน</div></label>
+        </div>
+        <input type="file" id="pmCompFile" accept="image/*" hidden>
+      </div>
+      <div class="field">
+        <label data-i18n="iae9dd3e8">ลายเซ็นผู้ปฏิบัติงาน</label>
+        <div class="sig-pad-box">
+          <canvas id="pmCompSigWorker" class="sig-pad" width="480" height="150"></canvas>
+          <button class="sig-clear-btn" type="button" onclick="pmSigWorkerPad.clear()" data-i18n="ib2d64a98">ล้างลายเซ็น</button>
+        </div>
+      </div>
+      <div class="field">
+        <label data-i18n="i964c23e1">ชื่อลูกค้า / ผู้ตรวจรับงาน</label>
+        <input class="tin" id="pmCompCustomerName" placeholder="ชื่อ-นามสกุลผู้ตรวจรับ" data-i18n-placeholder="i5041deff">
+      </div>
+      <div class="field">
+        <label data-i18n="id009b008">ลายเซ็นลูกค้า / ผู้ตรวจรับงาน</label>
+        <div class="sig-pad-box">
+          <canvas id="pmCompSigCustomer" class="sig-pad" width="480" height="150"></canvas>
+          <button class="sig-clear-btn" type="button" onclick="pmSigCustomerPad.clear()" data-i18n="ib2d64a98">ล้างลายเซ็น</button>
+        </div>
+        <div style="font-size:11.5px;color:var(--ink-soft);margin-top:6px" data-i18n="i84014c42">เซ็นชื่อไว้ก่อนกดบันทึก จะนำไปแสดงตอนพิมพ์ใบงานในหน้าประวัติ (ไม่บังคับ)</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;padding:18px 24px 24px">
+      <button class="btn btn-soft" id="pmCompCancelBtn" type="button" style="flex:1" data-i18n="i7d3094b8">ยกเลิก</button>
+      <button class="btn btn-primary" id="pmCompSaveBtn" type="button" style="flex:1" data-i18n="ia1d3eae7">✅ บันทึกและปิดงาน</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ MODAL: มอบหมายผู้ปฏิบัติงาน (Assign worker) — admin/manager/leader ══════ -->
+<div id="pmAssignModal" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(20,26,34,.6);align-items:center;justify-content:center;padding:20px">
+  <div style="background:var(--surface);border-radius:18px;max-width:420px;width:100%;box-shadow:var(--shadow-lift)">
+    <div style="padding:20px 24px 0;display:flex;align-items:center;justify-content:space-between">
+      <h3 data-i18n="ib6046802">มอบหมายผู้ปฏิบัติงาน</h3>
+      <div onclick="closePmAssignModal()" style="cursor:pointer;font-size:18px">&times;</div>
+    </div>
+    <div style="padding:18px 24px 8px;display:flex;flex-direction:column;gap:14px">
+      <div id="pmAssignModalMeta" style="font-size:13px;color:var(--ink-soft)"></div>
+      <div class="field">
+        <label data-i18n="i5bba79d1">ผู้ปฏิบัติงาน</label>
+        <select class="tin" id="pmAssignSelect"><option value="" data-i18n="ib9f5b9c5">— ไม่มอบหมาย —</option></select>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;padding:18px 24px 24px">
+      <button class="btn btn-soft" id="pmAssignCancelBtn" type="button" style="flex:1" data-i18n="i7d3094b8">ยกเลิก</button>
+      <button class="btn btn-primary" id="pmAssignSaveBtn" type="button" style="flex:1" data-i18n="ib6b59fbf">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ PANEL: CORRECTIVE MAINTENANCE ══════ -->
+<section class="panel" id="panel-cm">
+  <div class="eyebrow">Corrective Maintenance</div>
+  <div class="panel-title" data-i18n="i18d7c6e6">การบำรุงรักษาเชิงแก้ไข</div>
+  <div class="panel-desc" data-i18n="i59f87c09">แจ้งซ่อมเมื่อพบปัญหา มอบหมายผู้ปฏิบัติงาน แล้วบันทึกผลปิดงานพร้อมสาเหตุ/วิธีแก้/อะไหล่ที่ใช้</div>
+
+  <div class="cm-subnav">
+    <button class="cm-subtab active" data-cmview="overview" type="button" data-i18n="i70e131c5">ภาพรวม</button>
+    <button class="cm-subtab" data-cmview="tickets" type="button"><span data-i18n="i1ca41099">ใบแจ้งซ่อม</span> <span class="pill" id="cmTicketPill">0</span></button>
+    <button class="cm-subtab" data-cmview="history" type="button" data-i18n="i520e8207">ประวัติ</button>
+  </div>
+
+  <!-- OVERVIEW -->
+  <div class="cm-view active" id="cmView-overview">
+    <div class="kpi-row" id="cmKpiRow"></div>
+  </div>
+
+  <!-- TICKETS (รอมอบหมาย + กำลังดำเนินการ) -->
+  <div class="cm-view" id="cmView-tickets">
+    <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+      <button class="btn btn-primary edit-only" id="cmReportBtn" type="button" data-i18n="icce3f674">🛠️ แจ้งซ่อม</button>
+    </div>
+    <div class="dash-card"><div id="cmTicketList"></div></div>
+  </div>
+
+  <!-- HISTORY -->
+  <div class="cm-view" id="cmView-history">
+    <div class="dash-card"><div id="cmHistoryList"></div></div>
+  </div>
+</section>
+
+<!-- ══════ MODAL: แจ้งซ่อม (Report CM ticket) ══════ -->
+<div id="cmReportModal" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(20,26,34,.6);align-items:center;justify-content:center;padding:20px">
+  <div style="background:var(--surface);border-radius:18px;max-width:520px;width:100%;max-height:88vh;overflow-y:auto;box-shadow:var(--shadow-lift)">
+    <div style="padding:20px 24px 0;display:flex;align-items:center;justify-content:space-between">
+      <h3 data-i18n="ic7cfdc99">แจ้งซ่อม</h3>
+      <div id="cmReportModalClose" style="cursor:pointer;font-size:18px">&times;</div>
+    </div>
+    <div style="padding:18px 24px 8px;display:flex;flex-direction:column;gap:14px">
+      <div class="cascade" style="grid-template-columns:1fr 1fr">
+        <div class="field"><label><span data-i18n="ibedef050">โครงการ</span> <span class="req">*</span></label><select class="tin" id="cmRptProject"></select></div>
+        <div class="field"><label><span data-i18n="ibc779a30">อุปกรณ์</span> <span class="req">*</span></label><select class="tin" id="cmRptEquip"></select></div>
+      </div>
+      <div class="field">
+        <label data-i18n="i348a60d5">ความเร่งด่วน</label>
+        <select class="tin" id="cmRptPriority">
+          <option value="normal" data-i18n="i204cbd8c">ปกติ</option>
+          <option value="urgent" data-i18n="ie11d8dd5">ด่วน</option>
+        </select>
+      </div>
+      <div class="field"><label><span data-i18n="iecb82b23">รายละเอียดปัญหา</span> <span class="req">*</span></label><textarea class="tin" id="cmRptProblem" placeholder="อาการเสีย/ปัญหาที่พบ" data-i18n-placeholder="ic68ac398" style="min-height:80px"></textarea></div>
+      <div class="field">
+        <label data-i18n="i1f763e64">รูปถ่ายประกอบ (ไม่บังคับ)</label>
+        <div class="imgslot">
+          <label class="drop" id="cmRptDrop" for="cmRptFile"><div class="ph-content"><div class="drop-hint"><b data-i18n="i18c57d25">เลือกรูป</b><span data-i18n="i2ab4476f">ภาพปัญหาที่พบ</span></div></div><div class="replace-badge" data-i18n="i353072b9">แตะเพื่อเปลี่ยน</div></label>
+        </div>
+        <input type="file" id="cmRptFile" accept="image/*" hidden>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;padding:18px 24px 24px">
+      <button class="btn btn-soft" id="cmRptCancelBtn" type="button" style="flex:1" data-i18n="i7d3094b8">ยกเลิก</button>
+      <button class="btn btn-primary" id="cmRptSaveBtn" type="button" style="flex:1" data-i18n="ibc7bd587">📨 แจ้งซ่อม</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ MODAL: มอบหมายผู้ปฏิบัติงาน (CM) — admin/manager/leader ══════ -->
+<div id="cmAssignModal" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(20,26,34,.6);align-items:center;justify-content:center;padding:20px">
+  <div style="background:var(--surface);border-radius:18px;max-width:420px;width:100%;box-shadow:var(--shadow-lift)">
+    <div style="padding:20px 24px 0;display:flex;align-items:center;justify-content:space-between">
+      <h3 data-i18n="ib6046802">มอบหมายผู้ปฏิบัติงาน</h3>
+      <div onclick="closeCmAssignModal()" style="cursor:pointer;font-size:18px">&times;</div>
+    </div>
+    <div style="padding:18px 24px 8px;display:flex;flex-direction:column;gap:14px">
+      <div id="cmAssignModalMeta" style="font-size:13px;color:var(--ink-soft)"></div>
+      <div class="field">
+        <label data-i18n="i5bba79d1">ผู้ปฏิบัติงาน</label>
+        <select class="tin" id="cmAssignSelect"><option value="" data-i18n="ib9f5b9c5">— ไม่มอบหมาย —</option></select>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;padding:18px 24px 24px">
+      <button class="btn btn-soft" id="cmAssignCancelBtn" type="button" style="flex:1" data-i18n="i7d3094b8">ยกเลิก</button>
+      <button class="btn btn-primary" id="cmAssignSaveBtn" type="button" style="flex:1" data-i18n="ib6b59fbf">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ MODAL: บันทึกผลปิดงาน (CM) ══════ -->
+<div id="cmCompleteModal" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(20,26,34,.6);align-items:center;justify-content:center;padding:20px">
+  <div style="background:var(--surface);border-radius:18px;max-width:560px;width:100%;max-height:88vh;overflow-y:auto;box-shadow:var(--shadow-lift)">
+    <div style="padding:20px 24px 0;display:flex;align-items:center;justify-content:space-between">
+      <h3 data-i18n="ie23a26ba">บันทึกผลปิดงาน</h3>
+      <div id="cmCompModalClose" style="cursor:pointer;font-size:18px">&times;</div>
+    </div>
+    <div style="padding:10px 24px 0;color:var(--ink-soft);font-size:13px" id="cmCompModalMeta"></div>
+    <div style="padding:8px 24px;display:flex;flex-direction:column;gap:14px">
+      <div class="field"><label data-i18n="ibca544f4">สาเหตุที่เสีย (Cause of Failure)</label><textarea class="tin" id="cmCompCause" placeholder="สาเหตุของปัญหา" data-i18n-placeholder="i3a223d12" style="min-height:56px"></textarea></div>
+      <div class="field"><label data-i18n="i5b1b1ad4">วิธีแก้ไข (Action Taken)</label><textarea class="tin" id="cmCompAction" placeholder="สิ่งที่ทำเพื่อแก้ไข" data-i18n-placeholder="ibc9745d3" style="min-height:56px"></textarea></div>
+      <div class="field"><label data-i18n="ie6d3228a">Down Time (นาที)</label><input class="tin" type="number" min="0" id="cmCompDowntime" placeholder="เช่น 45" data-i18n-placeholder="ibab5f9a5"></div>
+
+      <div class="field">
+        <label><span data-i18n="ic6001366">อะไหล่ที่ใช้ไป</span> <span style="font-weight:400;color:var(--ink-soft)" data-i18n="iecd57806">(ไม่บังคับ)</span></label>
+        <div id="cmCompPartsRows" style="display:flex;flex-direction:column;gap:8px"></div>
+        <button class="ghost-btn" id="cmCompAddPartBtn" type="button" style="margin-top:8px" data-i18n="i9f187491">＋ เพิ่มอะไหล่ที่ใช้</button>
+        <div class="store-request-only" style="margin-top:8px"><button class="btn btn-soft" id="cmCompGotoWithdrawBtn" type="button" style="font-size:12.5px;padding:8px 14px" data-i18n="ic2d163ac">📦 ไปเบิกอะไหล่จากคลังสำหรับงานนี้</button></div>
+      </div>
+
+      <div class="field">
+        <label><span data-i18n="i176ceb8d">ชิ้นส่วนที่ถอดออก</span> <span style="font-weight:400;color:var(--ink-soft)" data-i18n="i206aea43">(ไม่บังคับ — ถ้ามีการเปลี่ยนอะไหล่)</span></label>
+        <div id="cmCompRemovedRows" style="display:flex;flex-direction:column;gap:8px"></div>
+        <button class="ghost-btn" id="cmCompAddRemovedBtn" type="button" style="margin-top:8px" data-i18n="i710f1b41">＋ เพิ่มชิ้นส่วนที่ถอดออก</button>
+      </div>
+
+      <div class="field"><label data-i18n="i89ef56de">หมายเหตุ</label><textarea class="tin" id="cmCompNote" placeholder="รายละเอียดเพิ่มเติม" data-i18n-placeholder="idcdbe485" style="min-height:56px"></textarea></div>
+
+      <div class="cascade" style="grid-template-columns:1fr 1fr">
+        <div class="field">
+          <label data-i18n="iba3099c0">รูปก่อนซ่อม</label>
+          <div class="imgslot">
+            <label class="drop" id="cmCompDropBefore" for="cmCompFileBefore"><div class="ph-content"><div class="drop-hint"><b data-i18n="i18c57d25">เลือกรูป</b><span data-i18n="ie44f514e">ก่อนซ่อม</span></div></div><div class="replace-badge" data-i18n="i353072b9">แตะเพื่อเปลี่ยน</div></label>
+          </div>
+          <input type="file" id="cmCompFileBefore" accept="image/*" hidden>
+        </div>
+        <div class="field">
+          <label data-i18n="iebe073f7">รูปหลังซ่อม</label>
+          <div class="imgslot">
+            <label class="drop" id="cmCompDropAfter" for="cmCompFileAfter"><div class="ph-content"><div class="drop-hint"><b data-i18n="i18c57d25">เลือกรูป</b><span data-i18n="i597a2ef5">หลังซ่อม</span></div></div><div class="replace-badge" data-i18n="i353072b9">แตะเพื่อเปลี่ยน</div></label>
+          </div>
+          <input type="file" id="cmCompFileAfter" accept="image/*" hidden>
+        </div>
+      </div>
+
+      <div class="field">
+        <label data-i18n="iae9dd3e8">ลายเซ็นผู้ปฏิบัติงาน</label>
+        <div class="sig-pad-box">
+          <canvas id="cmCompSigWorker" class="sig-pad" width="480" height="150"></canvas>
+          <button class="sig-clear-btn" type="button" onclick="cmSigWorkerPad.clear()" data-i18n="ib2d64a98">ล้างลายเซ็น</button>
+        </div>
+      </div>
+      <div class="field">
+        <label data-i18n="i964c23e1">ชื่อลูกค้า / ผู้ตรวจรับงาน</label>
+        <input class="tin" id="cmCompCustomerName" placeholder="ชื่อ-นามสกุลผู้ตรวจรับ" data-i18n-placeholder="i5041deff">
+      </div>
+      <div class="field">
+        <label data-i18n="id009b008">ลายเซ็นลูกค้า / ผู้ตรวจรับงาน</label>
+        <div class="sig-pad-box">
+          <canvas id="cmCompSigCustomer" class="sig-pad" width="480" height="150"></canvas>
+          <button class="sig-clear-btn" type="button" onclick="cmSigCustomerPad.clear()" data-i18n="ib2d64a98">ล้างลายเซ็น</button>
+        </div>
+        <div style="font-size:11.5px;color:var(--ink-soft);margin-top:6px" data-i18n="i84014c42">เซ็นชื่อไว้ก่อนกดบันทึก จะนำไปแสดงตอนพิมพ์ใบงานในหน้าประวัติ (ไม่บังคับ)</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;padding:18px 24px 24px">
+      <button class="btn btn-soft" id="cmCompCancelBtn" type="button" style="flex:1" data-i18n="i7d3094b8">ยกเลิก</button>
+      <button class="btn btn-primary" id="cmCompSaveBtn" type="button" style="flex:1" data-i18n="ia1d3eae7">✅ บันทึกและปิดงาน</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ PANEL: CHECKLIST / WI TEMPLATE LIBRARY (ส่วนหนึ่งของ Equipment Control) ══════ -->
+<section class="panel" id="panel-wi">
+  <div class="eyebrow">Equipment Control</div>
+  <div class="panel-title" data-i18n="iaface55e">คลังเช็คลิสต์ &amp; WI</div>
+  <div class="panel-desc" data-i18n="i4c2d01b8">แม่แบบเช็คลิสต์และเอกสารคู่มือการทำงาน (Work Instruction) กลาง ใช้ร่วมกับ PM/CM ได้ — แก้ไขได้เฉพาะ admin/manager ผู้ใช้อื่นดูและใช้งานได้อย่างเดียว</div>
+  <div class="ro-banner" style="display:block" id="wiReadonlyHint" data-i18n="ia32bcd72">เฉพาะ admin/manager เท่านั้นที่สร้าง/แก้ไขแม่แบบได้ — บัญชีอื่นใช้ตามแม่แบบที่มีอยู่เท่านั้น</div>
+  <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+    <button class="btn btn-primary admin-mgr-only" id="wiAddTemplateBtn" type="button" data-i18n="i5c0f57a7">＋ เพิ่มแม่แบบเช็คลิสต์</button>
+  </div>
+  <div class="dash-card"><div id="wiTemplateList"></div></div>
+</section>
+
+<!-- ══════ MODAL: เพิ่ม/แก้ไข แม่แบบเช็คลิสต์ & WI ══════ -->
+<div id="wiTemplateModal" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(20,26,34,.6);align-items:center;justify-content:center;padding:20px">
+  <div style="background:var(--surface);border-radius:18px;max-width:560px;width:100%;max-height:88vh;overflow-y:auto;box-shadow:var(--shadow-lift)">
+    <div style="padding:20px 24px 0;display:flex;align-items:center;justify-content:space-between">
+      <h3 id="wiModalTitle" data-i18n="ic2c7e559">เพิ่มแม่แบบเช็คลิสต์</h3>
+      <div id="wiModalClose" style="cursor:pointer;font-size:18px">&times;</div>
+    </div>
+    <div style="padding:18px 24px 8px;display:flex;flex-direction:column;gap:14px">
+      <div class="field"><label><span data-i18n="i70fbdad1">ชื่อแม่แบบ</span> <span class="req">*</span></label><input class="tin" id="wiName" placeholder="เช่น หม้อแปลงไฟฟ้า - PM รายไตรมาส" data-i18n-placeholder="i409f8e75"></div>
+      <div class="field">
+        <label><span data-i18n="id704b456">รายการเช็คลิสต์</span> <span style="font-weight:400;color:var(--ink-soft)" data-i18n="i3a30c8e5">(คัดลอกจาก Excel วางได้เลย — 1 บรรทัด = 1 หัวข้อ)</span></label>
+        <textarea class="tin" id="wiChecklistPaste" placeholder="ตรวจสอบระดับน้ำมันหม้อแปลง&#10;ตรวจสอบอุณหภูมิตัวเครื่อง&#10;ทำความสะอาดบุชชิ่ง" data-i18n-placeholder="ic3a2c33b" style="min-height:120px;font-family:'IBM Plex Mono';font-size:13px"></textarea>
+        <div style="font-size:11.5px;color:var(--ink-soft);margin-top:6px" id="wiChecklistCount" data-i18n="i30cf7388">0 หัวข้อ</div>
+      </div>
+      <div class="field">
+        <label data-i18n="id259d41b">ไฟล์ WI (PDF)</label>
+        <div id="wiFileCurrentInfo" style="font-size:12.5px;color:var(--ink-soft);margin-bottom:6px;display:none"></div>
+        <input type="file" class="tin" id="wiFileInput" accept="application/pdf">
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;padding:18px 24px 24px">
+      <button class="btn btn-soft" id="wiCancelBtn" type="button" style="flex:1" data-i18n="i7d3094b8">ยกเลิก</button>
+      <button class="btn btn-primary" id="wiSaveBtn" type="button" style="flex:1" data-i18n="ib6b59fbf">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ PANEL: เอกสารอุปกรณ์ (ส่วนหนึ่งของ Equipment Control) — แนบ/ลบได้เฉพาะ admin ══════ -->
+<section class="panel" id="panel-eqdocs">
+  <div class="eyebrow">Equipment Control</div>
+  <div class="panel-title" data-i18n="ie398ffc0">เอกสารอุปกรณ์</div>
+  <div class="panel-desc" data-i18n="ieaaa52ad">แนบไฟล์ข้อมูลของอุปกรณ์แต่ละชิ้น เช่น คู่มือ สเปค ใบรับประกัน แบบวงจร ฯลฯ (ไฟล์ประเภทใดก็ได้) — ทุกคนเปิดดู/ดาวน์โหลดได้ แต่แนบ/แก้ไข/ลบได้เฉพาะ admin เท่านั้น</div>
+  <div class="ro-banner" style="display:block" id="eqDocsReadonlyHint" data-i18n="id0000684">เฉพาะ admin เท่านั้นที่แนบ/ลบเอกสารได้ — บัญชีอื่นเปิดดู/ดาวน์โหลดได้อย่างเดียว</div>
+  <div style="display:flex;gap:10px;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap">
+    <select class="tin" id="eqDocsFilterProject" style="max-width:260px"><option value="" data-i18n="i365732ee">— ทุกโครงการ —</option></select>
+    <button class="btn btn-primary admin-only" id="eqDocAddBtn" type="button" data-i18n="id1054287">＋ เพิ่มเอกสาร</button>
+  </div>
+  <div class="dash-card"><div id="eqDocList"></div></div>
+</section>
+
+<!-- ══════ MODAL: เพิ่ม/แก้ไข เอกสารอุปกรณ์ ══════ -->
+<div id="eqDocModal" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(20,26,34,.6);align-items:center;justify-content:center;padding:20px">
+  <div style="background:var(--surface);border-radius:18px;max-width:520px;width:100%;max-height:88vh;overflow-y:auto;box-shadow:var(--shadow-lift)">
+    <div style="padding:20px 24px 0;display:flex;align-items:center;justify-content:space-between">
+      <h3 id="eqDocModalTitle" data-i18n="i0ddc5f5c">เพิ่มเอกสารอุปกรณ์</h3>
+      <div id="eqDocModalClose" style="cursor:pointer;font-size:18px">&times;</div>
+    </div>
+    <div style="padding:18px 24px 8px;display:flex;flex-direction:column;gap:14px">
+      <div class="cascade" style="grid-template-columns:1fr 1fr">
+        <div class="field"><label><span data-i18n="ibedef050">โครงการ</span> <span class="req">*</span></label><select class="tin" id="eqDocProject"></select></div>
+        <div class="field"><label><span data-i18n="ibc779a30">อุปกรณ์</span> <span class="req">*</span></label><select class="tin" id="eqDocEquip"></select></div>
+      </div>
+      <div class="field"><label><span data-i18n="if882a4cf">ชื่อเอกสาร</span> <span class="req">*</span></label><input class="tin" id="eqDocName" placeholder="เช่น คู่มือการใช้งาน, ใบรับประกัน" data-i18n-placeholder="i1789c0da"></div>
+      <div class="field">
+        <label><span data-i18n="ie1f21979">ไฟล์แนบ</span> <span class="req">*</span></label>
+        <div id="eqDocFileCurrentInfo" style="font-size:12.5px;color:var(--ink-soft);margin-bottom:6px;display:none"></div>
+        <input type="file" class="tin" id="eqDocFileInput">
+      </div>
+      <div class="field"><label data-i18n="i89ef56de">หมายเหตุ</label><input class="tin" id="eqDocNote" placeholder="ไม่บังคับ" data-i18n-placeholder="i6402522e"></div>
+    </div>
+    <div style="display:flex;gap:10px;padding:18px 24px 24px">
+      <button class="btn btn-soft" id="eqDocCancelBtn" type="button" style="flex:1" data-i18n="i7d3094b8">ยกเลิก</button>
+      <button class="btn btn-primary" id="eqDocSaveBtn" type="button" style="flex:1" data-i18n="ib6b59fbf">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ PANEL: STORE CONTROL (คลังอะไหล่) ══════ -->
+<section class="panel" id="panel-store">
+  <div class="eyebrow">Store Control</div>
+  <div class="panel-title" data-i18n="if196cbef">คลังอะไหล่</div>
+  <div class="panel-desc" data-i18n="ic7a6129d">ระบบสต็อกอะไหล่ — เบิก/คืน ต้องรอหัวหน้างาน/manager/admin อนุมัติก่อนตัด/คืนสต็อกจริง ส่วนรายการอะไหล่และการเพิ่ม/ย้าย/นำออกโดยตรง จัดการได้เฉพาะ admin/manager</div>
+
+  <div class="store-subnav">
+    <button class="store-subtab active" data-storeview="parts" type="button" data-i18n="ic7221092">รายการอะไหล่</button>
+    <button class="store-subtab" data-storeview="withdraw" type="button"><span data-i18n="i466d2be5">เบิกอะไหล่</span> <span class="pill" id="storeWithdrawPill">0</span></button>
+    <button class="store-subtab" data-storeview="return" type="button"><span data-i18n="i63f0b794">คืนอะไหล่</span> <span class="pill" id="storeReturnPill">0</span></button>
+    <button class="store-subtab store-mgr-only" data-storeview="adjust" type="button" data-i18n="i76d674a3">เพิ่ม/ย้าย/นำออก</button>
+  </div>
+
+  <!-- รายการอะไหล่ + สต็อกคงเหลือ -->
+  <div class="store-view active" id="storeView-parts">
+    <div style="display:flex;gap:10px;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap">
+      <select class="tin" id="storePartsFilterProject" style="max-width:260px"><option value="" data-i18n="i365732ee">— ทุกโครงการ —</option></select>
+      <button class="btn btn-primary store-mgr-only" id="storePartAddBtn" type="button" data-i18n="id437de93">＋ เพิ่มรายการอะไหล่</button>
+    </div>
+    <div class="dash-card"><div id="storePartList"></div></div>
+  </div>
+
+  <!-- เบิกอะไหล่ -->
+  <div class="store-view" id="storeView-withdraw">
+    <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+      <button class="btn btn-primary store-request-only" id="storeWithdrawAddBtn" type="button" data-i18n="i26374d8b">＋ เบิกอะไหล่</button>
+    </div>
+    <div class="dash-card"><div id="storeWithdrawList"></div></div>
+  </div>
+
+  <!-- คืนอะไหล่ -->
+  <div class="store-view" id="storeView-return">
+    <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+      <button class="btn btn-primary store-request-only" id="storeReturnAddBtn" type="button" data-i18n="idb86fd02">＋ คืนอะไหล่</button>
+    </div>
+    <div class="dash-card"><div id="storeReturnList"></div></div>
+  </div>
+
+  <!-- เพิ่ม/ย้าย/นำออก — admin/manager เท่านั้น -->
+  <div class="store-view" id="storeView-adjust">
+    <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+      <button class="btn btn-primary" id="storeAdjustAddBtn" type="button" data-i18n="ic9f6f4b1">＋ ปรับสต็อก</button>
+    </div>
+    <div class="dash-card"><div id="storeAdjustList"></div></div>
+  </div>
+</section>
+
+<!-- ══════ MODAL: เพิ่ม/แก้ไข รายการอะไหล่ ══════ -->
+<div id="storePartModal" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(20,26,34,.6);align-items:center;justify-content:center;padding:20px">
+  <div style="background:var(--surface);border-radius:18px;max-width:460px;width:100%;box-shadow:var(--shadow-lift)">
+    <div style="padding:20px 24px 0;display:flex;align-items:center;justify-content:space-between">
+      <h3 id="storePartModalTitle" data-i18n="i069972e5">เพิ่มรายการอะไหล่</h3>
+      <div onclick="closeStorePartModal()" style="cursor:pointer;font-size:18px">&times;</div>
+    </div>
+    <div style="padding:18px 24px 8px;display:flex;flex-direction:column;gap:14px">
+      <div style="font-size:11.5px;color:var(--ink-soft)" data-i18n="i6f30c9cc">รายการอะไหล่เป็นแค็ตตาล็อกกลาง ใช้ร่วมกันได้ทุกโครงการ — สต็อกคงเหลือของแต่ละโครงการจะตั้งแยกต่างหากผ่านเมนู "เพิ่ม/ย้าย/นำออก"</div>
+      <div class="cascade" style="grid-template-columns:1fr 1fr">
+        <div class="field"><label data-i18n="i1fd9477e">รหัสอะไหล่ (ไม่บังคับ)</label><input class="tin" id="storePartNo" placeholder="เช่น BRG-6205" data-i18n-placeholder="i12f3a886"></div>
+        <div class="field"><label><span data-i18n="i1b70c832">หน่วยนับ</span> <span class="req">*</span></label><input class="tin" id="storePartUnit" placeholder="เช่น ชิ้น, ตัว, ลิตร" data-i18n-placeholder="if0f4613f"></div>
+      </div>
+      <div class="field"><label><span data-i18n="ic3838bad">ชื่ออะไหล่</span> <span class="req">*</span></label><input class="tin" id="storePartName" placeholder="เช่น ตลับลูกปืน 6205" data-i18n-placeholder="i45705b5a"></div>
+      <div class="field"><label data-i18n="ia2f7e96d">สต็อกขั้นต่ำ (แจ้งเตือนเมื่อต่ำกว่านี้ต่อโครงการ)</label><input class="tin" type="number" min="0" id="storePartMinStock" placeholder="0"></div>
+      <div class="field"><label data-i18n="i89ef56de">หมายเหตุ</label><input class="tin" id="storePartNote" placeholder="ไม่บังคับ" data-i18n-placeholder="i6402522e"></div>
+    </div>
+    <div style="display:flex;gap:10px;padding:18px 24px 24px">
+      <button class="btn btn-soft" onclick="closeStorePartModal()" type="button" style="flex:1" data-i18n="i7d3094b8">ยกเลิก</button>
+      <button class="btn btn-primary" id="storePartSaveBtn" type="button" style="flex:1" data-i18n="ib6b59fbf">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ MODAL: เบิก / คืน อะไหล่ (ใช้ร่วมกัน สลับโหมดด้วย storeReqMode) ══════ -->
+<div id="storeReqModal" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(20,26,34,.6);align-items:center;justify-content:center;padding:20px">
+  <div style="background:var(--surface);border-radius:18px;max-width:460px;width:100%;box-shadow:var(--shadow-lift)">
+    <div style="padding:20px 24px 0;display:flex;align-items:center;justify-content:space-between">
+      <h3 id="storeReqModalTitle" data-i18n="i466d2be5">เบิกอะไหล่</h3>
+      <div onclick="closeStoreReqModal()" style="cursor:pointer;font-size:18px">&times;</div>
+    </div>
+    <div style="padding:18px 24px 8px;display:flex;flex-direction:column;gap:14px">
+      <div class="field"><label><span data-i18n="ibedef050">โครงการ</span> <span class="req">*</span></label><select class="tin" id="storeReqProject"></select></div>
+      <div class="field"><label><span data-i18n="i18ad7fb6">อะไหล่</span> <span class="req">*</span></label><select class="tin" id="storeReqPart"></select></div>
+      <div id="storeReqStockInfo" style="font-size:12.5px;color:var(--ink-soft)"></div>
+      <div class="field"><label><span data-i18n="i8672999c">จำนวน</span> <span class="req">*</span></label><input class="tin" type="number" min="1" id="storeReqQty"></div>
+      <div class="field"><label data-i18n="id2c1e22a">เหตุผล / ใช้กับงานอะไร</label><input class="tin" id="storeReqReason" placeholder="เช่น เปลี่ยนอะไหล่ตอน PM หม้อแปลง A" data-i18n-placeholder="id85b6ecf"></div>
+      <div style="font-size:11.5px;color:var(--ink-soft);font-style:italic" data-i18n="i33d1e2bf">* รายการนี้จะรอหัวหน้างาน/manager/admin อนุมัติก่อน จึงจะตัด/คืนสต็อกจริง</div>
+    </div>
+    <div style="display:flex;gap:10px;padding:18px 24px 24px">
+      <button class="btn btn-soft" onclick="closeStoreReqModal()" type="button" style="flex:1" data-i18n="i7d3094b8">ยกเลิก</button>
+      <button class="btn btn-primary" id="storeReqSaveBtn" type="button" style="flex:1" data-i18n="ic6df9cd2">📨 ส่งคำขอ</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ MODAL: ปรับสต็อกโดยตรง (เพิ่ม/ย้าย/นำออก) — admin/manager ══════ -->
+<div id="storeAdjustModal" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(20,26,34,.6);align-items:center;justify-content:center;padding:20px">
+  <div style="background:var(--surface);border-radius:18px;max-width:460px;width:100%;box-shadow:var(--shadow-lift)">
+    <div style="padding:20px 24px 0;display:flex;align-items:center;justify-content:space-between">
+      <h3 data-i18n="i8d4d1694">ปรับสต็อกโดยตรง</h3>
+      <div onclick="closeStoreAdjustModal()" style="cursor:pointer;font-size:18px">&times;</div>
+    </div>
+    <div style="padding:18px 24px 8px;display:flex;flex-direction:column;gap:14px">
+      <div class="field">
+        <label data-i18n="i8a3c71bd">ประเภทการปรับ</label>
+        <select class="tin" id="storeAdjustMode">
+          <option value="add" data-i18n="i56677299">➕ เพิ่มสต็อก (รับเข้า/ซื้อเพิ่ม)</option>
+          <option value="remove" data-i18n="id73b72fa">➖ นำออก (ตัดจำหน่าย/สูญหาย)</option>
+          <option value="move" data-i18n="ia7dae6a7">↔️ ย้ายไปอีกโครงการ</option>
+        </select>
+      </div>
+      <div class="field"><label><span data-i18n="ibedef050">โครงการ</span> <span class="req">*</span></label><select class="tin" id="storeAdjustProject"></select></div>
+      <div class="field"><label><span data-i18n="i18ad7fb6">อะไหล่</span> <span class="req">*</span></label><select class="tin" id="storeAdjustPart"></select></div>
+      <div id="storeAdjustStockInfo" style="font-size:12.5px;color:var(--ink-soft)"></div>
+      <div class="field" id="storeAdjustToProjectField" style="display:none"><label><span data-i18n="if192d43c">โครงการปลายทาง</span> <span class="req">*</span></label><select class="tin" id="storeAdjustToProject"></select></div>
+      <div class="field"><label><span data-i18n="i8672999c">จำนวน</span> <span class="req">*</span></label><input class="tin" type="number" min="1" id="storeAdjustQty"></div>
+      <div class="field"><label data-i18n="ic7450f3c">เหตุผล</label><input class="tin" id="storeAdjustReason" placeholder="เช่น สั่งซื้อเข้าคลังรอบใหม่" data-i18n-placeholder="i0278ce77"></div>
+    </div>
+    <div style="display:flex;gap:10px;padding:18px 24px 24px">
+      <button class="btn btn-soft" onclick="closeStoreAdjustModal()" type="button" style="flex:1" data-i18n="i7d3094b8">ยกเลิก</button>
+      <button class="btn btn-primary" id="storeAdjustSaveBtn" type="button" style="flex:1" data-i18n="ib6b59fbf">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ PANEL: ADD ══════ -->
+<section class="panel" id="panel-add">
+  <div class="eyebrow" id="addEyebrow">New Record</div>
+  <div class="panel-title" id="addTitle" data-i18n="if64c92f3">เพิ่มรายการใหม่</div>
+  <div class="panel-desc" data-i18n="idf40d630">เลือกข้อมูลแบบลำดับขั้น เลือกอุปกรณ์แล้วยี่ห้อ/รุ่นจะแสดงอัตโนมัติ</div>
+  <div class="card">
+    <div class="card-h"><span class="step">1</span><h3 data-i18n="ife7bb184">เลือกอุปกรณ์</h3></div>
+    <div class="card-b">
+      <div class="cascade">
+        <div class="field"><label><span data-i18n="ibedef050">โครงการ</span> <span class="req">*</span></label><div class="combo" data-level="project"></div></div>
+        <div class="field"><label data-i18n="i7a9c166a">ระบบ</label><div class="combo disabled" data-level="system"></div></div>
+        <div class="field"><label data-i18n="ide54d670">ประเภทสถานที่</label><div class="combo disabled" data-level="typeloc"></div></div>
+        <div class="field"><label><span data-i18n="i07797b7f">สถานที่</span> <span class="req">*</span></label><div class="combo disabled" data-level="loc"></div></div>
+        <div class="field"><label data-i18n="id566c840">สถานที่ย่อย</label><div class="combo disabled" data-level="sub"></div></div>
+        <div class="field"><label data-i18n="i2cc46a73">ประเภทอุปกรณ์</label><input type="text" id="inpAsset" placeholder="เช่น Firewall, Switch, Transceiver..." data-i18n-placeholder="i865089d7" autocomplete="off"></div>
+        <div class="field"><label><span data-i18n="ibc779a30">อุปกรณ์</span> <span class="req">*</span></label><div class="combo disabled" data-level="equip"></div></div>
+        <div class="field"><label>Serial Number</label><div class="combo disabled" data-level="serial"></div></div>
+      </div>
+      <div class="bm-row">
+        <div class="bm-box"><div class="k" data-i18n="i61593911">ยี่ห้อ AUTO</div><div class="v empty" id="bmBrand" data-empty="— เลือกอุปกรณ์ —"><input id="inpBrand" placeholder="—" style="display:none"></div></div>
+        <div class="bm-box"><div class="k" data-i18n="i0712ca2d">รุ่น AUTO</div><div class="v empty" id="bmModel" data-empty="— เลือกอุปกรณ์ —"><input id="inpModel" placeholder="—" style="display:none"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-h"><span class="step">2</span><h3 data-i18n="i8c20d514">แนบรูปภาพ</h3></div>
+    <div class="card-b">
+      <div class="imgs">
+        <div class="imgslot"><div class="cap"><span class="tagn" data-i18n="i13a859f5">รูป 1</span> <span data-i18n="i6f2b12cb">รูปรวมอุปกรณ์</span></div>
+          <label class="drop" id="dropMain" for="fileMain"><div class="ph-content"><div class="drop-hint"><b data-i18n="id581891b">เลือกรูปรวม</b><span data-i18n="i5cda26aa">ภาพอุปกรณ์ทั้งตัว</span></div></div><div class="replace-badge" data-i18n="i353072b9">แตะเพื่อเปลี่ยน</div></label>
+          <input type="file" id="fileMain" accept="image/*" hidden></div>
+        <div class="imgslot"><div class="cap"><span class="tagn" data-i18n="ic24f8324">รูป 2</span> <span data-i18n="icb6c73eb">รูปสติกเกอร์</span></div>
+          <label class="drop" id="dropSticker" for="fileSticker"><div class="ph-content"><div class="drop-hint"><b data-i18n="ia665a5e3">เลือกรูปสติกเกอร์</b><span data-i18n="i46ab4f15">ป้าย/ฉลากอุปกรณ์</span></div></div><div class="replace-badge" data-i18n="i353072b9">แตะเพื่อเปลี่ยน</div></label>
+          <input type="file" id="fileSticker" accept="image/*" hidden></div>
+        <div class="imgslot"><div class="cap"><span class="tagn" data-i18n="i0802a9a2">รูป 3</span> <span data-i18n="i3be86270">รูปเพิ่มเติม 1</span></div>
+          <label class="drop" id="dropImg3" for="fileImg3"><div class="ph-content"><div class="drop-hint"><b data-i18n="i93a8ee59">เลือกรูปเพิ่มเติม</b></div></div><div class="replace-badge" data-i18n="i353072b9">แตะเพื่อเปลี่ยน</div></label>
+          <input type="file" id="fileImg3" accept="image/*" hidden></div>
+        <div class="imgslot"><div class="cap"><span class="tagn" data-i18n="id6139051">รูป 4</span> <span data-i18n="i4cc2fcd2">รูปเพิ่มเติม 2</span></div>
+          <label class="drop" id="dropImg4" for="fileImg4"><div class="ph-content"><div class="drop-hint"><b data-i18n="i93a8ee59">เลือกรูปเพิ่มเติม</b></div></div><div class="replace-badge" data-i18n="i353072b9">แตะเพื่อเปลี่ยน</div></label>
+          <input type="file" id="fileImg4" accept="image/*" hidden></div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-h"><span class="step">3</span><h3 data-i18n="i551f198f">ข้อมูลการตรวจ</h3></div>
+    <div class="card-b">
+      <div class="field"><label><span data-i18n="ia4d51aca">ชื่อผู้ตรวจ</span> <span class="req">*</span></label><div class="combo" id="inspCombo"></div></div>
+      <div class="field" style="margin-top:14px"><label data-i18n="i89ef56de">หมายเหตุ</label><textarea class="tin" id="inpNote" placeholder="รายละเอียดเพิ่มเติม" data-i18n-placeholder="idcdbe485"></textarea></div>
+    </div>
+  </div>
+  <div class="form-actions">
+    <button class="btn btn-soft" id="resetBtn" data-i18n="i543aabd8">ล้างฟอร์ม</button>
+    <button class="btn btn-primary" id="saveBtn" data-i18n="i64092e71">บันทึกรายการ</button>
+  </div>
+</section>
+
+<!-- ══════ PANEL: SAVED ══════ -->
+<section class="panel" id="panel-saved">
+  <div class="eyebrow">Records</div>
+  <div class="panel-title" data-i18n="i7625bfd4">รายการที่บันทึก</div>
+  <div class="ro-banner" data-i18n="i86e4ef43">บัญชีของคุณ (observer) ดูข้อมูลได้อย่างเดียว</div>
+  <div id="savedProgress" class="dash-card" style="margin-bottom:14px;display:none">
+    <div class="dc-head"><b data-i18n="i2c0ccb56">ความคืบหน้าการบันทึกอุปกรณ์</b><select id="savedProgFilter" class="tin" style="width:auto;min-width:160px;font-size:12.5px;padding:6px 10px;display:none"></select></div>
+    <div id="savedProgBody"></div>
+  </div>
+  <div id="myAssignmentsSection" style="display:none;margin-bottom:18px">
+    <div class="dash-card">
+      <div class="dc-head">
+        <b><span data-i18n="ia40d3b25">📋 งานที่ได้รับมอบหมาย</span> <span class="pill" id="assignPill">0</span></b>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn btn-soft" id="exportAssignBtn" style="font-size:12px;padding:6px 12px" data-i18n="i4b21113e">⬇ ส่งออก Excel</button>
+          <button class="btn btn-soft" id="setProjectTargetBtn" style="font-size:12px;padding:6px 12px;display:none">📅 Target</button>
+          <button class="btn btn-primary" id="assignWorkBtn" style="font-size:12px;padding:6px 14px;display:none" data-i18n="id56f710e">＋ มอบหมายงาน</button>
+          <button id="assignSectionToggle" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--ink-soft)" title="แสดง/ซ่อน" data-i18n-title="i5d70510e">▾</button>
+        </div>
+      </div>
+      <div id="assignStatsPanel" style="margin-top:12px"></div>
+      <div id="myAssignmentsList" style="display:flex;flex-direction:column;gap:10px;margin-top:8px"></div>
+    </div>
+  </div>
+  <div class="saved-tools flt-toolbar" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:center">
+    <input type="text" id="savedSearch" placeholder="ค้นหารายการ…" data-i18n-placeholder="i776e7b7c" style="flex:1;min-width:180px;background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:9px 12px;outline:none">
+    <select id="savedFProject" class="tin" style="width:auto;min-width:130px"><option value="" data-i18n="i3a09fdd8">ทุกโครงการ</option></select>
+    <select id="savedFSystem" class="tin" style="width:auto;min-width:110px"><option value="" data-i18n="i8b0aa7b5">ทุกระบบ</option></select>
+    <select id="savedFLoc" class="tin" style="width:auto;min-width:130px"><option value="" data-i18n="i844e0513">ทุกสถานที่</option></select>
+    <select id="savedFSub" class="tin" style="width:auto;min-width:130px"><option value="" data-i18n="if2b84043">ทุกสถานที่ย่อย</option></select>
+    <select id="savedFEquip" class="tin" style="width:auto;min-width:150px"><option value="" data-i18n="i74f42ee2">ทุกอุปกรณ์</option></select>
+    <select id="savedSort" class="tin" style="width:auto;min-width:160px">
+      <option value="newest" data-i18n="i3b2763ea">ใหม่สุด→เก่าสุด</option><option value="oldest" data-i18n="ie89d7089">เก่าสุด→ใหม่สุด</option>
+      <option value="az" data-i18n="i231dffdc">อุปกรณ์ A→Z</option><option value="za" data-i18n="i30b65599">อุปกรณ์ Z→A</option>
+      <option value="proj_th_az" data-i18n="ia8b56838">โครง ก→ฮ</option><option value="proj_th_za" data-i18n="iee46e80f">โครง ฮ→ก</option>
+      <option value="proj_en_az" data-i18n="ic2c202f0">โครง A→Z</option><option value="proj_en_za" data-i18n="i704a5260">โครง Z→A</option>
+    </select>
+    <button class="ghost-btn" id="exportXlsx" data-i18n="i4b21113e">⬇ ส่งออก Excel</button>
+    <button class="ghost-btn" id="quickWordBtn" style="display:none" title="ดึงรายงาน Word ตามโครงการที่ filter อยู่ (ไม่มีหน้าปก)" data-i18n-title="icb7fa40a" data-i18n="i11fbb505">📄 ดึงรายงาน Word</button>
+  </div>
+  <div class="rlist" id="savedGrid"></div>
+</section>
+
+<!-- ══════ PANEL: SURVEY ══════ -->
+<section class="panel" id="panel-survey">
+  <div class="eyebrow">Onsite Survey</div>
+  <div class="panel-title" data-i18n="i95b23dc2">สำรวจข้อมูลภาคสนาม</div>
+  <div class="panel-desc" data-i18n="i7d739184">บันทึกข้อมูลอุปกรณ์ที่พบในหน้างาน</div>
+  <div id="surveyAssignSection" style="display:none;margin-bottom:18px">
+    <div class="dash-card">
+      <div class="dc-head">
+        <b><span data-i18n="ia40d3b25">📋 งานที่ได้รับมอบหมาย</span> <span class="pill" id="surveyAssignPill">0</span></b>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn btn-soft" id="surveyExportAssignBtn" style="font-size:12px;padding:6px 12px" data-i18n="i4b21113e">⬇ ส่งออก Excel</button>
+          <button class="btn btn-soft" id="surveySetProjectTargetBtn" style="font-size:12px;padding:6px 12px;display:none">📅 Target</button>
+          <button class="btn btn-primary" id="surveyAssignWorkBtn" style="font-size:12px;padding:6px 14px;display:none" data-i18n="id56f710e">＋ มอบหมายงาน</button>
+          <button id="surveyAssignToggle" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--ink-soft)" title="แสดง/ซ่อน" data-i18n-title="i5d70510e">▾</button>
+        </div>
+      </div>
+      <div id="surveyAssignStatsPanel" style="margin-top:12px"></div>
+      <div id="surveyAssignList" style="display:flex;flex-direction:column;gap:10px;margin-top:8px"></div>
+    </div>
+  </div>
+  <div class="flt-toolbar" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:center">
+    <input type="text" id="surveySearch" placeholder="ค้นหา…" data-i18n-placeholder="i7ca3ac30" style="flex:1;min-width:160px;background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:9px 12px;outline:none">
+    <select id="surveyFProject" class="tin" style="width:auto;min-width:130px"><option value="" data-i18n="i3a09fdd8">ทุกโครงการ</option></select>
+    <select id="surveyFSystem" class="tin" style="width:auto;min-width:110px"><option value="" data-i18n="i8b0aa7b5">ทุกระบบ</option></select>
+    <select id="surveyFLoc" class="tin" style="width:auto;min-width:130px"><option value="" data-i18n="i844e0513">ทุกสถานที่</option></select>
+    <select id="surveyFSub" class="tin" style="width:auto;min-width:130px"><option value="" data-i18n="if2b84043">ทุกสถานที่ย่อย</option></select>
+    <select id="surveyFEquip" class="tin" style="width:auto;min-width:150px"><option value="" data-i18n="i74f42ee2">ทุกอุปกรณ์</option></select>
+    <select id="surveySort" class="tin" style="width:auto;min-width:160px">
+      <option value="newest" data-i18n="i3b2763ea">ใหม่สุด→เก่าสุด</option>
+      <option value="oldest" data-i18n="ie89d7089">เก่าสุด→ใหม่สุด</option>
+      <option value="az" data-i18n="i231dffdc">อุปกรณ์ A→Z</option>
+      <option value="za" data-i18n="i30b65599">อุปกรณ์ Z→A</option>
+      <option value="proj_th_az" data-i18n="ia8b56838">โครง ก→ฮ</option>
+      <option value="proj_th_za" data-i18n="iee46e80f">โครง ฮ→ก</option>
+      <option value="proj_en_az" data-i18n="ic2c202f0">โครง A→Z</option>
+      <option value="proj_en_za" data-i18n="i704a5260">โครง Z→A</option>
+    </select>
+    <button class="ghost-btn" id="surveyExportBtn">⬇ Export Excel</button>
+    <button class="btn btn-primary edit-only" id="surveyAddBtn" style="border-radius:50px;padding:10px 22px;font-size:18px">＋</button>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th data-i18n="ibedef050">โครงการ</th><th data-i18n="i7a9c166a">ระบบ</th><th data-i18n="i07797b7f">สถานที่</th><th data-i18n="id566c840">สถานที่ย่อย</th><th data-i18n="ibc779a30">อุปกรณ์</th><th data-i18n="i11aa0f8b">ยี่ห้อ</th><th data-i18n="ic218938a">รุ่น</th><th>Serial</th><th data-i18n="i367e6925">ผู้กรอก</th><th data-i18n="i3bc53865">วันที่</th><th data-i18n="i2564e9fb">รูป</th><th></th></tr></thead>
+      <tbody id="surveyBody"></tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ══════ PANEL: IMPORT / EXPORT ══════ -->
+<section class="panel" id="panel-import">
+  <div class="eyebrow">Import / Export</div>
+  <div class="panel-title" data-i18n="i652ef113">นำเข้าข้อมูล & สร้างรายงาน Word</div>
+  <div class="panel-desc" data-i18n="ic29ea030">นำเข้าข้อมูลอุปกรณ์จาก Excel และสร้างรายงาน Word ด้วย Template ที่เชื่อมกับ Google Colab</div>
+
+  <div class="io-cols">
+    <!-- LEFT: Import Excel (admin only) -->
+    <div class="io-card admin-only">
+      <div class="io-head"><span class="io-ic imp">⬆</span><b data-i18n="ibc997b3f">นำเข้าข้อมูลอุปกรณ์ (Excel)</b></div>
+      <label class="import-drop" for="fileXlsx">
+        <div class="id-ic">📁</div>
+        <b data-i18n="ie10cbab6">เลือกหรือลากไฟล์ Excel มาวาง</b>
+        <span data-i18n="i555defa2">รองรับ .xlsx · .xls · .csv</span>
+        <span class="id-btn" data-i18n="i3471606a">เลือกไฟล์</span>
+      </label>
+      <input type="file" id="fileXlsx" accept=".xlsx,.xls,.csv" hidden>
+      <div class="import-cols" style="margin-top:14px">
+        <div style="font-size:12px;font-weight:600;color:var(--ink-soft);margin-bottom:6px" data-i18n="i4587b8cd">คอลัมน์ที่รองรับ</div>
+        <div class="ic-grid"><span data-i18n="ibc6e58ee">ลำดับ</span><span data-i18n="ibedef050">โครงการ</span><span data-i18n="i7a9c166a">ระบบ</span><span data-i18n="ide54d670">ประเภทสถานที่</span><span data-i18n="i07797b7f">สถานที่</span><span data-i18n="id566c840">สถานที่ย่อย</span><span data-i18n="i2cc46a73">ประเภทอุปกรณ์</span><span data-i18n="ibc779a30">อุปกรณ์</span><span data-i18n="i11aa0f8b">ยี่ห้อ</span><span data-i18n="ic218938a">รุ่น</span><span>Serial Number</span></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+        <button class="ghost-btn" onclick="downloadMasterTemplate()" style="flex:1;min-width:140px" data-i18n="ie378bf20">⬇ โหลดฟอร์มเปล่า</button>
+        <button class="ghost-btn" onclick="downloadMasterData()" style="flex:1;min-width:140px" data-i18n="ie4e911ae">⬇ โหลดข้อมูลปัจจุบัน</button>
+      </div>
+      <div class="admin-only" style="margin-top:10px">
+        <button class="ghost-btn" id="importFromSurveyBtn" style="width:100%;justify-content:center;background:rgba(99,102,241,.08);border-color:rgba(99,102,241,.3);color:#6366F1" data-i18n="i92f37331">📋 ดึงข้อมูลจากสำรวจภาคสนาม</button>
+      </div>
+      <div id="importPreview" style="margin-top:12px"></div>
+    </div>
+
+    <!-- RIGHT: Word Template (connected to Colab pipeline) -->
+    <div class="io-card admin-only">
+      <div class="io-head"><span class="io-ic exp">📝</span><b data-i18n="i34953541">สร้างรายงาน Word Template</b></div>
+
+      <div class="wg-steps">
+        <!-- Step 1: Group & Report Info -->
+        <div class="wg-step">
+          <div class="wg-num">1</div>
+          <div class="wg-body">
+            <h4 style="display:flex;align-items:center;gap:10px"><span data-i18n="if57e34af">ข้อมูลรายงาน</span> <button type="button" class="round-add-btn" id="reportInfoBulkBtn" title="อัปโหลด/จัดการข้อมูลสัญญาเป็นชุด (Excel)" data-i18n-title="ie6b8ae67">＋</button></h4>
+            <div class="wg-row">
+              <div class="wg-field">
+                <label data-i18n="i37a0d3aa">จัดกลุ่มตาม</label>
+                <select class="tin" id="wgGroupBy"><option value="location" data-i18n="i07797b7f">สถานที่</option><option value="project" data-i18n="ibedef050">โครงการ</option><option value="system" data-i18n="i7a9c166a">ระบบ</option></select>
+              </div>
+              <div class="wg-field">
+                <label data-i18n="i2b2e3050">ชื่อรายงาน</label>
+                <input class="tin" id="wgReportName" value="รายงานผลการติดฉลากระบุรายละเอียดอุปกรณ์">
+              </div>
+            </div>
+            <div class="wg-row" style="margin-top:10px">
+              <div class="wg-field">
+                <label data-i18n="if29b3c19">ชื่อสัญญา/โครงการ</label>
+                <input class="tin" id="wgContract" list="dl_wgContract" placeholder="เช่น งานบำรุงรักษา..." data-i18n-placeholder="ia84da2d1">
+                <datalist id="dl_wgContract"></datalist>
+              </div>
+              <div class="wg-field">
+                <label data-i18n="i9a2f0af6">เลขที่สัญญา</label>
+                <input class="tin" id="wgContractNo" list="dl_wgContractNo" placeholder="เช่น 22-22-2569" data-i18n-placeholder="i14d38e18">
+                <datalist id="dl_wgContractNo"></datalist>
+              </div>
+            </div>
+            <div class="wg-row" style="margin-top:10px">
+              <div class="wg-field">
+                <label data-i18n="i3dc948af">ลงวันที่</label>
+                <input class="tin" id="wgDate" placeholder="วันที่" data-i18n-placeholder="i3bc53865">
+              </div>
+              <div class="wg-field">
+                <label data-i18n="id2122f30">หน่วยงานลูกค้า</label>
+                <input class="tin" id="wgClient" list="dl_wgClient" placeholder="หน่วยงานลูกค้า" data-i18n-placeholder="id2122f30">
+                <datalist id="dl_wgClient"></datalist>
+              </div>
+            </div>
+            <div class="wg-row" style="margin-top:10px">
+              <div class="wg-field">
+                <label data-i18n="i3c0724af">ข้อกำหนด (clause)</label>
+                <input class="tin" id="wgClause" list="dl_wgClause" placeholder="เช่น 5.2" data-i18n-placeholder="i95430958">
+                <datalist id="dl_wgClause"></datalist>
+              </div>
+              <div class="wg-field">
+                <label data-i18n="i7858766f">นำส่ง (submittedTo)</label>
+                <input class="tin" id="wgSubmittedTo" list="dl_wgSubmittedTo" placeholder="เช่น สำนักดิจิทัล กทม." data-i18n-placeholder="i3a5f1c06">
+                <datalist id="dl_wgSubmittedTo"></datalist>
+              </div>
+            </div>
+            <!-- logocustomer คือลิงก์ Google Drive ของรูปโลโก้บริษัทลูกค้า ไม่ใช่ข้อความ — ไม่ให้พิมพ์เอง
+                 ค่าจะถูกเติมอัตโนมัติจากข้อมูลสัญญาของโครงการ (ดูปุ่ม + ด้านบนสำหรับอัปโหลด Excel) -->
+            <input type="hidden" id="wgLogoCustomer">
+            <datalist id="dl_wgLogoCustomer"></datalist>
+          </div>
+        </div>
+
+        <!-- Step 2: Template Source — เลือกจากรายการที่บันทึกไว้ หรือเพิ่ม Template ใหม่ -->
+        <div class="wg-step">
+          <div class="wg-num">2</div>
+          <div class="wg-body">
+            <h4 data-i18n="i3a125651">Template ที่ใช้</h4>
+            <div style="display:flex;align-items:center;gap:8px">
+              <select class="tin" id="tmplPicker" style="flex:1"></select>
+              <button class="round-add-btn admin-only" id="tmplAddBtn" type="button" title="เพิ่ม Template ใหม่" data-i18n-title="ifa38a325">＋</button>
+            </div>
+            <input type="hidden" id="wgTemplateId">
+          </div>
+        </div>
+
+        <!-- Step 3: Generate -->
+        <div class="wg-step">
+          <div class="wg-num">3</div>
+          <div class="wg-body">
+            <h4 data-i18n="iadd92e87">สร้างรายงาน</h4>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn btn-primary" id="wgGenerate" style="flex:1" disabled data-i18n="i45809454">⏳ กำลังโหลดไลบรารี...</button>
+            </div>
+            <div style="margin-top:8px">
+              <a id="wgColabLink" href="#" target="_blank" style="display:none">
+                <button class="ghost-btn" style="width:100%;justify-content:center;margin-top:4px" data-i18n="iab4c68e9">🔗 เปิด Google Colab Pipeline</button>
+              </a>
+            </div>
+            <!-- Progress -->
+            <div class="wg-progress" id="wgProgress">
+              <div id="wgStatus" style="font-size:12.5px;color:var(--ink-soft)" data-i18n="i9e15e613">กำลังเตรียมข้อมูล...</div>
+              <div class="wg-bar-wrap"><div class="wg-bar" id="wgBar"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════ PANEL: MASTER ══════ -->
+<section class="panel" id="panel-master">
+  <div class="eyebrow">Master Data</div>
+  <div class="panel-title" data-i18n="ie7c8d46c">จัดการข้อมูลหลัก</div>
+  <div class="flt-toolbar" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:center">
+    <input type="text" id="masterSearch" placeholder="ค้นหาในข้อมูลหลัก…" data-i18n-placeholder="i898f82ac" style="flex:1;min-width:180px;background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:9px 12px;outline:none">
+    <select id="masterFProject" class="tin" style="width:auto;min-width:130px"><option value="" data-i18n="i3a09fdd8">ทุกโครงการ</option></select>
+    <select id="masterFSystem" class="tin" style="width:auto;min-width:110px"><option value="" data-i18n="i8b0aa7b5">ทุกระบบ</option></select>
+    <select id="masterFLoc" class="tin" style="width:auto;min-width:130px"><option value="" data-i18n="i844e0513">ทุกสถานที่</option></select>
+    <select id="masterFSub" class="tin" style="width:auto;min-width:130px"><option value="" data-i18n="if2b84043">ทุกสถานที่ย่อย</option></select>
+    <select id="masterFEquip" class="tin" style="width:auto;min-width:150px"><option value="" data-i18n="i74f42ee2">ทุกอุปกรณ์</option></select>
+    <select id="masterFMissing" class="tin" style="width:auto;min-width:160px">
+      <option value="" data-i18n="i31797079">แสดงทั้งหมด</option>
+      <option value="brand" data-i18n="ie2b3d84d">ขาดยี่ห้อ</option>
+      <option value="model" data-i18n="ia5e56b9f">ขาดรุ่น</option>
+      <option value="serial" data-i18n="iede9aeec">ขาด Serial</option>
+      <option value="any" data-i18n="i3e2553d9">ขาดข้อมูลใดก็ตาม</option>
+    </select>
+    <select id="masterFSort" class="tin" style="width:auto;min-width:160px">
+      <option value="order_asc" data-i18n="ib27266d0">ลำดับ น้อย→มาก</option>
+      <option value="order_desc" data-i18n="ia2f719e9">ลำดับ มาก→น้อย</option>
+    </select>
+    <button class="btn btn-primary edit-only" id="addMasterBtn" data-i18n="i5defc751">＋ เพิ่มอุปกรณ์</button>
+    <button class="btn btn-danger edit-only" id="bulkDelMasterBtn" style="background:#EF4444;color:#fff;border:none" data-i18n="i275c4f98">🗑 ลบตามเงื่อนไข</button>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th title="ลำดับสำหรับ gen Word/PDF" data-i18n-title="i3432df5f" data-i18n="ibc6e58ee">ลำดับ</th><th data-i18n="ibedef050">โครงการ</th><th data-i18n="i7a9c166a">ระบบ</th><th data-i18n="ide54d670">ประเภทสถานที่</th><th data-i18n="i07797b7f">สถานที่</th><th data-i18n="id566c840">สถานที่ย่อย</th><th data-i18n="i2cc46a73">ประเภทอุปกรณ์</th><th data-i18n="ibc779a30">อุปกรณ์</th><th data-i18n="i11aa0f8b">ยี่ห้อ</th><th data-i18n="ic218938a">รุ่น</th><th>Serial</th><th></th></tr></thead>
+      <tbody id="masterBody"></tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ══════ PANEL: USERS ══════ -->
+<section class="panel" id="panel-users">
+  <div class="admin-only" style="margin-bottom:22px">
+    <div class="eyebrow">Page Permissions</div>
+    <div class="panel-title" style="font-size:16px" data-i18n="iae323db9">กำหนดสิทธิ์การเข้าถึงแต่ละ Role</div>
+    <div class="panel-desc" data-i18n="i1361ac06">เลือกได้ว่าแต่ละสิทธิ์ (role) จะเห็นหน้าไหน หรือใช้ปุ่ม "สร้างรายงาน PDF"/"ลบ" ได้หรือไม่</div>
+    <div id="pagePermContainer" style="background:var(--surface);border:1px solid var(--line-soft);border-radius:14px;padding:16px;box-shadow:var(--shadow)"></div>
+  </div>
+  <div class="eyebrow">User Management</div>
+  <div class="panel-title" data-i18n="ie1e01393">จัดการผู้ใช้</div>
+  <div class="user-cols">
+    <div class="card"><div class="card-b">
+      <div class="card-h"><span class="step">＋</span><h3 data-i18n="id3e21de6">เพิ่มผู้ใช้</h3></div>
+      <div class="field"><label><span data-i18n="ic8ba31b8">ชื่อผู้ใช้ (username)</span> <span class="req">*</span></label><input type="text" class="tin" id="nuUser" placeholder="เช่น somchai.j" data-i18n-placeholder="i14bc663f" autocomplete="off"></div>
+      <div class="field" style="margin-top:12px"><label><span data-i18n="i97110364">รหัสผ่าน</span> <span class="req">*</span></label><input type="text" class="tin" id="nuPass" placeholder="ตั้งรหัสผ่านเริ่มต้น" data-i18n-placeholder="ibdd1bbcd" autocomplete="off"></div>
+      <div class="field" style="margin-top:12px"><label data-i18n="i2f9a571a">ชื่อ-สกุล</label><input type="text" class="tin" id="nuName" placeholder="ชื่อที่แสดง" data-i18n-placeholder="i513c4da9"></div>
+      <div class="field" style="margin-top:12px"><label><span data-i18n="i6df8fbf0">อีเมล</span> <span style="font-weight:400;color:var(--ink-soft)" data-i18n="ia90842a3">(ใช้ส่งแจ้งเตือนเมื่อถูกมอบหมายงาน)</span></label><input type="email" class="tin" id="nuEmail" placeholder="เช่น somchai@company.com" data-i18n-placeholder="i59a878b9"></div>
+      <div class="field" style="margin-top:12px"><label><span data-i18n="ief25013f">สิทธิ์ (role)</span> <span class="req">*</span></label>
+        <select class="tin" id="nuRole">
+          <option value="inspector" data-i18n="i81cc293b">inspector — ผู้ตรวจ</option>
+          <option value="observer" data-i18n="i7dae5e0e">observer — ผู้สังเกตการณ์</option>
+          <option value="leader" data-i18n="i8c9815b3">leader — หัวหน้างาน</option>
+          <option value="manager" data-i18n="i2521ed65">manager — ผู้จัดการ</option>
+          <option value="admin" data-i18n="i38a8e5ef">admin — ผู้ดูแลระบบ</option>
+        </select>
+      </div>
+      <div id="nuProjectChips" class="chips-box" style="margin-top:12px"></div>
+      <div class="field" style="margin-top:12px"><label data-i18n="iaa668b8c">โครงการ (project)</label>
+        <div style="display:flex;align-items:center;gap:8px">
+          <input type="text" class="tin" id="nuProject" list="nuProjectList" placeholder="เลือกโครงการแล้วกด +" data-i18n-placeholder="i7adf245e" style="flex:1">
+          <button type="button" class="round-add-btn" id="nuProjectAdd" title="เพิ่มโครงการนี้" data-i18n-title="i580a819b">+</button>
+        </div>
+        <datalist id="nuProjectList"></datalist>
+      </div>
+      <button class="btn btn-primary" id="nuAdd" style="margin-top:16px;width:100%" data-i18n="id3e21de6">เพิ่มผู้ใช้</button>
+    </div></div>
+    <div class="card"><div class="card-b">
+      <div class="card-h"><span class="step">⬆</span><h3 data-i18n="i13e09848">นำเข้าจาก Excel</h3></div>
+      <label class="import-drop" for="fileUsers" style="padding:26px 18px">
+        <div class="id-ic" style="width:52px;height:52px;font-size:22px">📁</div>
+        <b data-i18n="i12f3e24b">เลือกหรือลากไฟล์ Excel</b><span>.xlsx · .xls · .csv</span>
+        <span class="id-btn" data-i18n="i3471606a">เลือกไฟล์</span>
+      </label>
+      <input type="file" id="fileUsers" accept=".xlsx,.xls,.csv" hidden>
+      <div class="import-cols" style="margin-top:14px">
+        <div style="font-size:12px;font-weight:600;color:var(--ink-soft);margin-bottom:6px" data-i18n="i4587b8cd">คอลัมน์ที่รองรับ</div>
+        <div class="ic-grid"><span>username</span><span>password</span><span>name</span><span>role</span><span>project</span><span>email</span></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+        <button class="ghost-btn" onclick="downloadUsersTemplate()" style="flex:1;min-width:140px" data-i18n="ie378bf20">⬇ โหลดฟอร์มเปล่า</button>
+        <button class="ghost-btn" onclick="downloadUsersData()" style="flex:1;min-width:140px" data-i18n="i8b56543b">⬇ โหลดข้อมูลผู้ใช้</button>
+      </div>
+      <div id="usersImportMsg" style="margin-top:12px"></div>
+    </div></div>
+  </div>
+  <div style="margin-top:20px;display:flex;gap:10px">
+    <input type="text" id="usersSearch" placeholder="ค้นหาผู้ใช้…" data-i18n-placeholder="i2696fbea" style="flex:1;background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:9px 12px;outline:none">
+    <button class="btn btn-soft" id="usersRefresh" data-i18n="ieee07671">↻ รีเฟรช</button>
+  </div>
+  <div class="table-wrap" style="margin-top:14px">
+    <table>
+      <thead><tr><th data-i18n="i8fa50c79">ชื่อผู้ใช้</th><th data-i18n="i97110364">รหัสผ่าน</th><th data-i18n="i2f9a571a">ชื่อ-สกุล</th><th data-i18n="i6df8fbf0">อีเมล</th><th data-i18n="i2cc712be">สิทธิ์</th><th data-i18n="ibedef050">โครงการ</th><th data-i18n="ic9701a0d">สถานะ</th><th></th></tr></thead>
+      <tbody id="usersBody"></tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ══════ ASSIGN MODAL ══════ -->
+<div id="assignModal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(20,26,34,.5);align-items:center;justify-content:center;padding:20px">
+  <div style="background:var(--surface);border-radius:18px;max-width:520px;width:100%;padding:28px;box-shadow:0 8px 40px rgba(0,0,0,.2);position:relative;max-height:90vh;overflow-y:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+      <div style="font-size:17px;font-weight:700;color:var(--ink)" data-i18n="id4524de0">มอบหมายงาน</div>
+      <button id="assignModalClose" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--ink-faint)">&times;</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div>
+        <label style="font-size:12px;font-weight:600;color:var(--ink-soft);display:block;margin-bottom:5px" data-i18n="ied5a3944">โครงการ *</label>
+        <div id="awProjectChips" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px"></div>
+        <input type="text" class="tin" id="awProject" placeholder="เพิ่มโครงการ…" data-i18n-placeholder="i87064c10" autocomplete="off" style="width:100%">
+      </div>
+      <div>
+        <label style="font-size:12px;font-weight:600;color:var(--ink-soft);display:block;margin-bottom:5px" data-i18n="i6ba9e2ee">ผู้รับงาน *</label>
+        <input type="text" class="tin" id="awAssignee" placeholder="พิมพ์หรือเลือกผู้รับงาน…" data-i18n-placeholder="ic8314591" autocomplete="off" style="width:100%">
+      </div>
+      <div>
+        <label style="font-size:12px;font-weight:600;color:var(--ink-soft);display:block;margin-bottom:8px" data-i18n="ibaac26a0">ขอบเขตงาน</label>
+        <div style="display:flex;flex-wrap:wrap;gap:10px">
+          <label style="display:flex;align-items:center;gap:5px;font-size:13px"><input type="radio" name="awScope" value="project" checked> <span data-i18n="i0768b1da">ทั้งโครงการ</span></label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:13px"><input type="radio" name="awScope" value="loc"> <span data-i18n="i07797b7f">สถานที่</span></label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:13px"><input type="radio" name="awScope" value="sub"> <span data-i18n="id566c840">สถานที่ย่อย</span></label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:13px"><input type="radio" name="awScope" value="equip"> <span data-i18n="ibc779a30">อุปกรณ์</span></label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:13px"><input type="radio" name="awScope" value="missing"> <span data-i18n="i4a12f789">กรอกข้อมูลขาด</span></label>
+        </div>
+      </div>
+      <div id="awLocRow" style="display:none">
+        <label style="font-size:12px;font-weight:600;color:var(--ink-soft);display:block;margin-bottom:5px" data-i18n="i07797b7f">สถานที่</label>
+        <div id="awLocChips" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px"></div>
+        <input type="text" class="tin" id="awLoc" placeholder="เพิ่มสถานที่…" data-i18n-placeholder="i3a490de7" autocomplete="off" style="width:100%">
+      </div>
+      <div id="awSubRow" style="display:none">
+        <label style="font-size:12px;font-weight:600;color:var(--ink-soft);display:block;margin-bottom:5px" data-i18n="id566c840">สถานที่ย่อย</label>
+        <div id="awSubChips" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px"></div>
+        <input type="text" class="tin" id="awSub" placeholder="เพิ่มสถานที่ย่อย…" data-i18n-placeholder="ibf410818" autocomplete="off" style="width:100%">
+      </div>
+      <div id="awEquipRow" style="display:none">
+        <label style="font-size:12px;font-weight:600;color:var(--ink-soft);display:block;margin-bottom:5px" data-i18n="ibc779a30">อุปกรณ์</label>
+        <div id="awEquipChips" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px"></div>
+        <input type="text" class="tin" id="awEquip" placeholder="เพิ่มอุปกรณ์…" data-i18n-placeholder="if36e6879" autocomplete="off" style="width:100%">
+      </div>
+      <div id="awMissingRow" style="display:none">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:6px">
+          <label style="font-size:12px;font-weight:600;color:var(--ink-soft);margin:0"><span data-i18n="i53359b7a">รายการที่ขาดข้อมูล</span> <span id="awMissingCount" style="color:var(--primary)"></span></label>
+          <div style="display:flex;align-items:center;gap:6px">
+            <label style="font-size:11px;color:var(--ink-soft);white-space:nowrap" data-i18n="id983f704">กรองสถานที่:</label>
+            <select id="awMissingLocFilter" class="tin" style="font-size:11px;padding:3px 6px;height:28px;min-width:120px"><option value="" data-i18n="ibd5d572d">ทั้งหมด</option></select>
+          </div>
+        </div>
+        <div id="awMissingTableWrap" style="max-height:340px;overflow-y:auto;border:1px solid var(--line-soft);border-radius:8px">
+          <table style="width:100%;border-collapse:collapse">
+            <thead style="position:sticky;top:0;background:var(--surface);z-index:1">
+              <tr style="border-bottom:2px solid var(--line-soft)">
+                <th style="padding:7px 10px;width:36px"><input type="checkbox" id="awMissingSelectAll" title="เลือกทั้งหมดที่แสดง" data-i18n-title="i1d317a49"></th>
+                <th style="padding:7px 8px;text-align:left;font-size:12px;white-space:nowrap" data-i18n="i07797b7f">สถานที่</th>
+                <th style="padding:7px 8px;text-align:left;font-size:12px;white-space:nowrap" data-i18n="id566c840">สถานที่ย่อย</th>
+                <th style="padding:7px 8px;text-align:left;font-size:12px;white-space:nowrap" data-i18n="ibc779a30">อุปกรณ์</th>
+                <th style="padding:7px 8px;text-align:left;font-size:12px;white-space:nowrap;color:#EF4444" data-i18n="i15e71e24">ข้อมูลที่ขาด</th>
+              </tr>
+            </thead>
+            <tbody id="awMissingBody"></tbody>
+          </table>
+        </div>
+        <div style="margin-top:6px;display:flex;gap:8px;align-items:center">
+          <span id="awMissingSelCount" style="font-size:11px;color:var(--ink-soft)" data-i18n="i9569d6d0">เลือก 0 รายการ</span>
+          <button type="button" id="awMissingSelLoc" style="font-size:11px;padding:3px 10px;border-radius:6px;background:var(--line-soft);color:var(--ink);border:none;cursor:pointer" data-i18n="i7c01d263">เลือกทั้งสถานที่นี้</button>
+          <button type="button" id="awMissingClearSel" style="font-size:11px;padding:3px 10px;border-radius:6px;background:var(--line-soft);color:var(--ink);border:none;cursor:pointer" data-i18n="i67de667f">ล้างการเลือก</button>
+        </div>
+      </div>
+      <div><label style="font-size:12px;font-weight:600;color:var(--ink-soft);display:block;margin-bottom:5px" data-i18n="i89ef56de">หมายเหตุ</label><input type="text" class="tin" id="awNote" placeholder="หมายเหตุ (ถ้ามี)" data-i18n-placeholder="i9d467dd5" style="width:100%"></div>
+      <div>
+        <label style="font-size:12px;font-weight:600;color:var(--ink-soft);display:block;margin-bottom:5px"><span data-i18n="ice2f14e1">วันที่ต้องเสร็จ</span> <span style="font-weight:400;color:var(--ink-faint)" data-i18n="iecd57806">(ไม่บังคับ)</span></label>
+        <input type="date" class="tin" id="awTargetDate" style="width:100%">
+        <div style="font-size:11px;color:var(--ink-faint);margin-top:3px" id="awTargetHint"></div>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px">
+      <button class="btn btn-soft" id="awCancelBtn" data-i18n="i7d3094b8">ยกเลิก</button>
+      <button class="btn btn-primary" id="awSaveBtn" data-i18n="id4524de0">มอบหมายงาน</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ PROJECT TARGET MODAL ══════ -->
+<div id="projectTargetModal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(20,26,34,.5);align-items:center;justify-content:center;padding:20px">
+  <div style="background:var(--surface);border-radius:18px;max-width:420px;width:100%;padding:28px;box-shadow:0 8px 40px rgba(0,0,0,.2);position:relative">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+      <div style="font-size:17px;font-weight:700;color:var(--ink)" data-i18n="i4e0631d4">📅 กำหนด Target โครงการ</div>
+      <button id="ptModalClose" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--ink-faint)">&times;</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div>
+        <label style="font-size:12px;font-weight:600;color:var(--ink-soft);display:block;margin-bottom:5px" data-i18n="ied5a3944">โครงการ *</label>
+        <input type="text" class="tin" id="ptProject" placeholder="พิมพ์หรือเลือกโครงการ…" data-i18n-placeholder="ibe6dca83" autocomplete="off" style="width:100%">
+      </div>
+      <div>
+        <label style="font-size:12px;font-weight:600;color:var(--ink-soft);display:block;margin-bottom:5px" data-i18n="i1c0c5e69">วันที่ต้องเสร็จ *</label>
+        <input type="date" class="tin" id="ptDeadline" style="width:100%">
+      </div>
+      <div>
+        <label style="font-size:12px;font-weight:600;color:var(--ink-soft);display:block;margin-bottom:5px" data-i18n="i89ef56de">หมายเหตุ</label>
+        <input type="text" class="tin" id="ptNote" placeholder="หมายเหตุ (ถ้ามี)" data-i18n-placeholder="i9d467dd5" style="width:100%">
+      </div>
+      <div id="ptCurrentInfo" style="font-size:12px;color:var(--ink-soft);background:var(--bg);border-radius:8px;padding:8px 12px;display:none"></div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px">
+      <button class="btn btn-soft" id="ptCancelBtn" data-i18n="i7d3094b8">ยกเลิก</button>
+      <button class="btn btn-primary" id="ptSaveBtn" data-i18n="ie3ceb049">บันทึก Target</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ FILL DATA MODAL ══════ -->
+<div id="fillDataModal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(20,26,34,.5);align-items:center;justify-content:center;padding:20px">
+  <div style="background:var(--surface);border-radius:18px;max-width:400px;width:100%;padding:28px;box-shadow:0 8px 40px rgba(0,0,0,.2);position:relative">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div style="font-size:16px;font-weight:700;color:var(--ink)" data-i18n="i5738f7cd">กรอกข้อมูลที่ขาด</div>
+      <button id="fillDataClose" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--ink-faint)">&times;</button>
+    </div>
+    <div id="fillDataInfo" style="margin-bottom:14px;font-size:13px;color:var(--ink-soft)"></div>
+    <div id="fillDataFields" style="display:flex;flex-direction:column;gap:12px"></div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px">
+      <button class="btn btn-soft" id="fillDataCancel" data-i18n="i7d3094b8">ยกเลิก</button>
+      <button class="btn btn-primary" id="fillDataSave" data-i18n="i6ea45a17">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+</main>
+</div> <!-- /.app-body -->
+
+<div id="reportArea"></div>
+<div class="toast" id="toast"><span class="tdot"></span><span id="toastMsg"></span></div>
+
+<!-- ══════ SURVEY DIALOG ══════ -->
+<div id="surveyDialog">
+  <div class="sdlg">
+    <div style="padding:20px 24px 0;display:flex;align-items:center;justify-content:space-between">
+      <h3 id="sdlgTitle" data-i18n="i304a208d">เพิ่มรายการสำรวจ</h3>
+      <div id="sdlgClose" style="cursor:pointer;font-size:18px">&times;</div>
+    </div>
+    <div style="padding:18px 24px 24px;display:flex;flex-direction:column;gap:14px">
+      <div style="background:var(--surface);border:1px solid var(--line-soft);border-radius:12px;padding:14px 16px">
+        <h4 style="font-size:13px;font-weight:600;color:var(--ink-soft);margin-bottom:10px" data-i18n="ib0acaa80">1. ข้อมูลอุปกรณ์</h4>
+        <div class="sdlg-grid">
+          <div><label style="font-size:12px;font-weight:600;color:var(--ink-soft);display:block;margin-bottom:5px" data-i18n="ied5a3944">โครงการ *</label><input class="tin" id="sdlgProject" placeholder="โครงการ" data-i18n-placeholder="ibedef050" autocomplete="off"></div>
+          <div><label style="font-size:12px;font-weight:600;color:var(--ink-soft);display:block;margin-bottom:5px" data-i18n="i7a9c166a">ระบบ</label><input class="tin" id="sdlgSystem" placeholder="ระบบ" data-i18n-placeholder="i7a9c166a" autocomplete="off"></div>
+          <div><label style="font-size:12px;font-weight:600;color:var(--ink-soft);display:block;margin-bottom:5px" data-i18n="i07797b7f">สถานที่</label><input class="tin" id="sdlgLoc" placeholder="สถานที่" data-i18n-placeholder="i07797b7f" autocomplete="off"></div>
+          <div><label style="font-size:12px;font-weight:600;color:var(--ink-soft);display:block;margin-bottom:5px" data-i18n="id566c840">สถานที่ย่อย</label><input class="tin" id="sdlgSub" placeholder="สถานที่ย่อย" data-i18n-placeholder="id566c840" autocomplete="off"></div>
+          <div><label style="font-size:12px;font-weight:600;color:var(--ink-soft);display:block;margin-bottom:5px" data-i18n="iaeb6dc87">อุปกรณ์ *</label><input class="tin" id="sdlgEquip" placeholder="ชื่ออุปกรณ์" data-i18n-placeholder="i67d0a534" autocomplete="off"></div>
+          <div><label style="font-size:12px;font-weight:600;color:var(--ink-soft);display:block;margin-bottom:5px">Serial Number</label><input class="tin" id="sdlgSerial" placeholder="S/N" autocomplete="off"></div>
+          <div><label style="font-size:12px;font-weight:600;color:var(--ink-soft);display:block;margin-bottom:5px" data-i18n="i11aa0f8b">ยี่ห้อ</label><input class="tin" id="sdlgBrand" placeholder="ยี่ห้อ" data-i18n-placeholder="i11aa0f8b" autocomplete="off"></div>
+          <div><label style="font-size:12px;font-weight:600;color:var(--ink-soft);display:block;margin-bottom:5px" data-i18n="ic218938a">รุ่น</label><input class="tin" id="sdlgModel" placeholder="รุ่น" data-i18n-placeholder="ic218938a" autocomplete="off"></div>
+        </div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--line-soft);border-radius:12px;padding:14px 16px">
+        <h4 style="font-size:13px;font-weight:600;color:var(--ink-soft);margin-bottom:10px" data-i18n="ifc4405ab">2. รูปภาพ</h4>
+        <div class="sdlg-imgs">
+          <div class="sdlg-imgslot">
+            <div class="scap"><span class="tagn" data-i18n="i13a859f5">รูป 1</span> <span data-i18n="i6f2b12cb">รูปรวมอุปกรณ์</span></div>
+            <label class="sdlg-drop" id="sdlgDropMain" for="sdlgFileMain">
+              <div class="dh"><b data-i18n="ibcc6b13e">แตะเพื่อเลือกรูป</b><span data-i18n="i5cda26aa">ภาพอุปกรณ์ทั้งตัว</span></div>
+              <div class="sdlg-replace" data-i18n="i353072b9">แตะเพื่อเปลี่ยน</div>
+            </label>
+            <input type="file" id="sdlgFileMain" accept="image/*" hidden>
+          </div>
+          <div class="sdlg-imgslot">
+            <div class="scap"><span class="tagn" data-i18n="ic24f8324">รูป 2</span> <span data-i18n="icb6c73eb">รูปสติกเกอร์</span></div>
+            <label class="sdlg-drop" id="sdlgDropSticker" for="sdlgFileSticker">
+              <div class="dh"><b data-i18n="ibcc6b13e">แตะเพื่อเลือกรูป</b><span data-i18n="i46ab4f15">ป้าย/ฉลากอุปกรณ์</span></div>
+              <div class="sdlg-replace" data-i18n="i353072b9">แตะเพื่อเปลี่ยน</div>
+            </label>
+            <input type="file" id="sdlgFileSticker" accept="image/*" hidden>
+          </div>
+        </div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--line-soft);border-radius:12px;padding:14px 16px">
+        <h4 style="font-size:13px;font-weight:600;color:var(--ink-soft);margin-bottom:10px" data-i18n="i7f237e9a">3. ข้อมูลการสำรวจ</h4>
+        <div class="sdlg-grid">
+          <div><label style="font-size:12px;font-weight:600;color:var(--ink-soft);display:block;margin-bottom:5px" data-i18n="i321ee071">ผู้กรอก *</label><input class="tin" id="sdlgInspector" placeholder="ชื่อผู้กรอก" data-i18n-placeholder="i7f1451d2" autocomplete="off"></div>
+          <div><label style="font-size:12px;font-weight:600;color:var(--ink-soft);display:block;margin-bottom:5px" data-i18n="iab530607">วันที่สำรวจ</label><input class="tin" type="date" id="sdlgDate"></div>
+        </div>
+        <div style="margin-top:10px"><label style="font-size:12px;font-weight:600;color:var(--ink-soft);display:block;margin-bottom:5px" data-i18n="i89ef56de">หมายเหตุ</label><textarea class="tin" id="sdlgNote" placeholder="สภาพอุปกรณ์ หมายเหตุ ฯลฯ" data-i18n-placeholder="ifb6a17b0" style="min-height:56px;width:100%;resize:vertical"></textarea></div>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;padding:0 24px 20px">
+      <button class="btn btn-soft" id="sdlgCancelBtn" style="flex:1" data-i18n="i7d3094b8">ยกเลิก</button>
+      <button class="btn btn-primary" id="sdlgSaveBtn" style="flex:1" data-i18n="ib6b59fbf">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<?!= include("script") ?>
+</body>
+</html>
