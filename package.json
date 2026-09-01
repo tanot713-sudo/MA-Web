@@ -1,0 +1,20 @@
+{
+  "name": "ma-web",
+  "version": "1.0.0",
+  "description": "AMR Inspection System — Node.js backend (Google Sheets + Drive via service account), replacing the Google Apps Script backend. Deployed on Vercel.",
+  "private": true,
+  "type": "commonjs",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "vercel dev",
+    "test": "node --test test/smoke.test.js"
+  },
+  "dependencies": {
+    "googleapis": "^144.0.0"
+  },
+  "devDependencies": {
+    "vercel": "^37.0.0"
+  }
+}

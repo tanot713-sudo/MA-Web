@@ -1,0 +1,11 @@
+{
+  "functions": {
+    "api/exec.js": {
+      "maxDuration": 30
+    }
+  },
+  "rewrites": [
+    { "source": "/api/exec", "destination": "/api/exec" },
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
+  ]
+}
